@@ -6,6 +6,7 @@ Company selection and live market data display
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import json
 
 from backend.config import INDIAN_COMPANIES, THEME, FEATURED_COMPANIES
 from backend.utils.data_fetcher import DataFetcher
@@ -194,19 +195,6 @@ def show():
                     st.success(f"Yahoo is available: {probe_result.get('message')}")
                 else:
                     st.error(f"Yahoo unavailable: {probe_result.get('message')}")
-
-        # Verbose diagnostic button
-        if st.button('Verbose Yahoo diagnostic', key='verbose_yahoo'):
-            with st.spinner('Running verbose Yahoo diagnostic...'):
-                try:
-                    diag = fetcher.yahoo_verbose_probe([ticker])
-                except Exception as d_ex:
-                    diag = {ticker: {'error': str(d_ex)}}
-                st.session_state['yahoo_verbose_diag'] = diag
-                # Display results
-                for sym, report in diag.items():
-                    with st.expander(f"Verbose diagnostic for {sym}"):
-                        st.json(report)
 
         # Pre-warm cache button
         if st.button('Pre-warm cache (popular tickers)', key='prewarm'):
