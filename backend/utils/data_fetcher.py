@@ -365,7 +365,137 @@ class DataFetcher:
 
         except Exception as e:
             logger.debug('Yahoo fetch failed for %s: %s', ticker, e)
-            # if Yahoo failed due to 401/Unauthorized or network, we'll try alternative providers
+            # If Yahoo via yfinance failed, attempt a direct HTTP session-based fetch that
+            # obtains cookies and uses query/chart endpoints with Referer headers.
+
+            def _try_yahoo_http_session(sym):
+                try:
+                    session = requests.Session()
+                    base_headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    }
+                    quote_page = f'https://finance.yahoo.com/quote/{sym}'
+                    # Initial GET to obtain cookies and any session tokens
+                    r = session.get(quote_page, headers=base_headers, timeout=10)
+                    if r.status_code not in (200, 201):
+                        logger.debug('Yahoo direct page GET returned %s for %s', r.status_code, sym)
+                    # Try chart endpoint which often returns structured JSON
+                    chart_url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=5d&interval=1d'
+                    h = dict(base_headers)
+                    h['Referer'] = quote_page
+                    h['Accept'] = 'application/json, text/javascript, */*; q=0.01'
+                    r2 = session.get(chart_url, headers=h, timeout=10)
+                    if r2.status_code == 200:
+                        try:
+                            payload = r2.json()
+                            chart = payload.get('chart', {})
+                            result = None
+                            results = chart.get('result')
+                            if isinstance(results, list) and len(results) > 0:
+                                result = results[0]
+                            if result:
+                                meta = result.get('meta', {})
+                                timestamp = result.get('timestamp') or []
+                                indicators = result.get('indicators', {})
+                                quote = indicators.get('quote', [])
+                                if quote and isinstance(quote, list):
+                                    q = quote[0]
+                                    closes = q.get('close', [])
+                                    opens = q.get('open', [])
+                                    highs = q.get('high', [])
+                                    lows = q.get('low', [])
+                                    volumes = q.get('volume', [])
+                                    if closes:
+                                        # pick the last non-null value
+                                        for i in range(len(closes)-1, -1, -1):
+                                            c = closes[i]
+                                            if c is not None:
+                                                close_v = float(c)
+                                                open_v = float(opens[i]) if i < len(opens) and opens[i] is not None else close_v
+                                                high_v = float(highs[i]) if i < len(highs) and highs[i] is not None else close_v
+                                                low_v = float(lows[i]) if i < len(lows) and lows[i] is not None else close_v
+                                                vol_v = int(volumes[i]) if i < len(volumes) and volumes[i] is not None else 0
+                                                # timestamp handling
+                                                ts = None
+                                                if timestamp and i < len(timestamp):
+                                                    try:
+                                                        ts = datetime.fromtimestamp(int(timestamp[i]), tz=timezone.utc)
+                                                    except Exception:
+                                                        ts = None
+                                                now = _ist_now()
+                                                if ts is not None:
+                                                    last_updated = ts.astimezone(timezone(timedelta(hours=5, minutes=30)))
+                                                else:
+                                                    last_updated = now
+
+                                                return {
+                                                    'ticker': ticker,
+                                                    'company_name': ticker,
+                                                    'current_price': close_v,
+                                                    'open_price': open_v,
+                                                    'high_price': high_v,
+                                                    'low_price': low_v,
+                                                    'previous_close': close_v,
+                                                    'volume': vol_v,
+                                                    'market_status': _market_status_for(_ist_now()),
+                                                    'last_updated': last_updated.strftime('%Y-%m-%d %H:%M:%S %Z'),
+                                                    'date': last_updated.strftime('%Y-%m-%d'),
+                                                    'data_source': 'Yahoo-Chart-Endpoint',
+                                                    'is_fallback': False,
+                                                    'is_demo': False
+                                                }
+                        except Exception as je:
+                            logger.debug('Failed to parse Yahoo chart JSON for %s: %s', sym, je)
+                    else:
+                        logger.debug('Yahoo chart endpoint returned %s for %s', r2.status_code, sym)
+
+                    # As a fallback, try the quote endpoint
+                    quote_url = f'https://query1.finance.yahoo.com/v7/finance/quote?symbols={sym}'
+                    r3 = session.get(quote_url, headers=h, timeout=10)
+                    if r3.status_code == 200:
+                        try:
+                            payload = r3.json()
+                            results = payload.get('quoteResponse', {}).get('result', [])
+                            if results:
+                                res = results[0]
+                                price = res.get('regularMarketPrice') or res.get('regularMarketPreviousClose')
+                                open_p = res.get('regularMarketOpen')
+                                high_p = res.get('regularMarketDayHigh')
+                                low_p = res.get('regularMarketDayLow')
+                                prev = res.get('regularMarketPreviousClose')
+                                vol = res.get('regularMarketVolume') or res.get('volume') or 0
+                                now = _ist_now()
+                                return {
+                                    'ticker': ticker,
+                                    'company_name': res.get('longName') or ticker,
+                                    'current_price': float(price) if price is not None else 0.0,
+                                    'open_price': float(open_p) if open_p is not None else 0.0,
+                                    'high_price': float(high_p) if high_p is not None else 0.0,
+                                    'low_price': float(low_p) if low_p is not None else 0.0,
+                                    'previous_close': float(prev) if prev is not None else 0.0,
+                                    'volume': int(vol),
+                                    'market_status': _market_status_for(_ist_now()),
+                                    'last_updated': now.strftime('%Y-%m-%d %H:%M:%S %Z'),
+                                    'date': now.strftime('%Y-%m-%d'),
+                                    'data_source': 'Yahoo-Quote-Endpoint',
+                                    'is_fallback': False,
+                                    'is_demo': False
+                                }
+                        except Exception as je:
+                            logger.debug('Failed to parse Yahoo quote JSON for %s: %s', sym, je)
+                    else:
+                        logger.debug('Yahoo quote endpoint returned %s for %s', r3.status_code, sym)
+
+                except Exception as ex:
+                    logger.debug('Yahoo HTTP session attempt failed for %s: %s', sym, ex)
+                return None
+
+            # Try improved Yahoo HTTP session fetch
+            yahoo_http_result = _try_yahoo_http_session(yahoo_ticker)
+            if yahoo_http_result:
+                return yahoo_http_result
 
         # 2) Try Alpha Vantage if API key provided
         alpha_result = _try_alpha_vantage(yahoo_ticker)
