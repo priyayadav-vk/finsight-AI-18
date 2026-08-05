@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 import warnings
 import io
 from contextlib import redirect_stdout, redirect_stderr
+import requests
 warnings.filterwarnings('ignore')
 
 import logging
@@ -174,112 +175,233 @@ class DataFetcher:
     
     def fetch_live_data(self, ticker):
         """
-        Fetch the latest live data for a stock.
-        
-        Parameters:
-        -----------
-        ticker : str
-            Stock ticker symbol (e.g., 'RELIANCE.NS')
-        
-        Returns:
-        --------
-        dict : Contains current price, open, high, low, close, volume, etc.
+        Fetch the latest live data for a stock with multi-provider fallback.
+        Tries (in order): Yahoo (yfinance), Alpha Vantage (if ALPHAVANTAGE_API_KEY set),
+        TwelveData (if TWELVEDATA_API_KEY set). Falls back to demo data.
         """
-        try:
-            yahoo_ticker = self._resolve_ticker_for_yahoo(ticker)
+        yahoo_ticker = self._resolve_ticker_for_yahoo(ticker)
 
+        # helper to present IST times
+        def _ist_now():
+            return datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+
+        def _market_status_for(now):
+            market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+            market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+            if now.weekday() < 5:
+                if market_open <= now <= market_close:
+                    return "[OPEN]"
+                return "[CLOSED]"
+            return "[CLOSED] (Weekend)"
+
+        # Internal attempt: Alpha Vantage
+        def _try_alpha_vantage(sym):
+            key = os.environ.get('ALPHAVANTAGE_API_KEY')
+            if not key:
+                return None
+            try:
+                symbol = str(sym).split('.')[0]
+                url = 'https://www.alphavantage.co/query'
+                params = {'function': 'GLOBAL_QUOTE', 'symbol': symbol, 'apikey': key}
+                resp = requests.get(url, params=params, timeout=10)
+                if resp.status_code != 200:
+                    logger.debug('AlphaVantage non-200: %s', resp.status_code)
+                    return None
+                payload = resp.json()
+                gq = payload.get('Global Quote') or payload.get('Global Quote', {})
+                if not gq:
+                    return None
+                price = gq.get('05. price') or gq.get('05.price')
+                open_p = gq.get('02. open')
+                high_p = gq.get('03. high')
+                low_p = gq.get('04. low')
+                prev_close = gq.get('08. previous close') or gq.get('08.previous close')
+                vol = gq.get('06. volume')
+                last_trade_date = gq.get('07. latest trading day')
+
+                now = _ist_now()
+                last_updated = now
+                if last_trade_date:
+                    try:
+                        # Alpha returns date like YYYY-MM-DD
+                        dt = datetime.fromisoformat(last_trade_date)
+                        last_updated = dt.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+                    except Exception:
+                        last_updated = now
+
+                return {
+                    'ticker': ticker,
+                    'company_name': ticker,
+                    'current_price': float(price) if price is not None else 0.0,
+                    'open_price': float(open_p) if open_p is not None else 0.0,
+                    'high_price': float(high_p) if high_p is not None else 0.0,
+                    'low_price': float(low_p) if low_p is not None else 0.0,
+                    'previous_close': float(prev_close) if prev_close is not None else 0.0,
+                    'volume': int(vol) if vol is not None else 0,
+                    'market_status': _market_status_for(now),
+                    'last_updated': last_updated.strftime('%Y-%m-%d %H:%M:%S %Z'),
+                    'date': last_updated.strftime('%Y-%m-%d'),
+                    'data_source': 'AlphaVantage',
+                    'is_fallback': False,
+                    'is_demo': False
+                }
+            except Exception as e:
+                logger.debug('AlphaVantage fetch failed for %s: %s', sym, e)
+                return None
+
+        # Internal attempt: TwelveData
+        def _try_twelvedata(sym):
+            key = os.environ.get('TWELVEDATA_API_KEY')
+            if not key:
+                return None
+            try:
+                url = 'https://api.twelvedata.com/quote'
+                params = {'symbol': sym, 'apikey': key}
+                resp = requests.get(url, params=params, timeout=10)
+                if resp.status_code != 200:
+                    logger.debug('TwelveData non-200: %s', resp.status_code)
+                    return None
+                payload = resp.json()
+                if 'status' in payload and payload.get('status') == 'error':
+                    return None
+                price = payload.get('price')
+                open_p = payload.get('open')
+                high_p = payload.get('high')
+                low_p = payload.get('low')
+                prev_close = payload.get('previous_close') or payload.get('previousClose')
+                vol = payload.get('volume')
+                dt = payload.get('datetime') or payload.get('timestamp')
+
+                now = _ist_now()
+                last_updated = now
+                if dt:
+                    try:
+                        # TwelveData may return ISO datetime
+                        last_updated = pd.to_datetime(dt).to_pydatetime()
+                        if last_updated.tzinfo is None:
+                            last_updated = last_updated.replace(tzinfo=timezone.utc)
+                        last_updated = last_updated.astimezone(timezone(timedelta(hours=5, minutes=30)))
+                    except Exception:
+                        last_updated = now
+
+                return {
+                    'ticker': ticker,
+                    'company_name': ticker,
+                    'current_price': float(price) if price is not None else 0.0,
+                    'open_price': float(open_p) if open_p is not None else 0.0,
+                    'high_price': float(high_p) if high_p is not None else 0.0,
+                    'low_price': float(low_p) if low_p is not None else 0.0,
+                    'previous_close': float(prev_close) if prev_close is not None else 0.0,
+                    'volume': int(vol) if vol is not None else 0,
+                    'market_status': _market_status_for(now),
+                    'last_updated': last_updated.strftime('%Y-%m-%d %H:%M:%S %Z'),
+                    'date': last_updated.strftime('%Y-%m-%d'),
+                    'data_source': 'TwelveData',
+                    'is_fallback': False,
+                    'is_demo': False
+                }
+            except Exception as e:
+                logger.debug('TwelveData fetch failed for %s: %s', sym, e)
+                return None
+
+        # 1) Try Yahoo via yfinance (quietly)
+        try:
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 stock = yf.Ticker(yahoo_ticker)
-                
-                # Get historical data (last 5 days to get today's data)
                 data = stock.history(period='5d')
-            
-            if data is None or data.empty:
-                raise Exception(f"No data returned for {ticker}")
-            
-            # Get the latest row (today's or latest available data)
-            latest = data.iloc[-1]
-            
-            # Get additional info
-            info = stock.info if hasattr(stock, 'info') else {}
-            
-            # Get market status (Open/Closed) using server time but present timestamps in IST
-            server_now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
-            market_open_time = server_now.replace(hour=9, minute=15, second=0, microsecond=0)
-            market_close_time = server_now.replace(hour=15, minute=30, second=0, microsecond=0)
 
-            if server_now.weekday() < 5:  # Weekday (Monday=0 to Friday=4)
-                if market_open_time <= server_now <= market_close_time:
-                    market_status = "[OPEN]"
-                else:
-                    market_status = "[CLOSED]"
-            else:
-                market_status = "[CLOSED] (Weekend)"
+            if data is not None and not data.empty:
+                latest = data.iloc[-1]
+                info = stock.info if hasattr(stock, 'info') else {}
 
-            previous_close = latest['Close']
-            if hasattr(data, 'shape') and len(data) > 1:
-                try:
-                    previous_close = data.iloc[-2]['Close']
-                except Exception:
-                    previous_close = latest['Close']
-
-            # Prefer the timestamp embedded in the data index if available
-            data_ts = None
-            try:
-                data_index = latest.name
-                data_ts = pd.to_datetime(data_index)
-                # If no timezone info, assume UTC
-                if data_ts.tzinfo is None:
-                    data_ts = data_ts.replace(tzinfo=timezone.utc)
-                # Convert to IST for display
-                data_ts_ist = data_ts.astimezone(timezone(timedelta(hours=5, minutes=30)))
-                last_updated_str = data_ts_ist.strftime("%Y-%m-%d %H:%M:%S %Z")
-                date_str = data_ts_ist.strftime("%Y-%m-%d")
-            except Exception:
+                # timestamp handling
                 data_ts = None
-                last_updated_str = server_now.strftime("%Y-%m-%d %H:%M:%S %Z")
-                date_str = server_now.strftime("%Y-%m-%d")
+                try:
+                    data_index = latest.name
+                    data_ts = pd.to_datetime(data_index)
+                    if data_ts.tzinfo is None:
+                        data_ts = data_ts.replace(tzinfo=timezone.utc)
+                    data_ts_ist = data_ts.astimezone(timezone(timedelta(hours=5, minutes=30)))
+                    last_updated_str = data_ts_ist.strftime("%Y-%m-%d %H:%M:%S %Z")
+                    date_str = data_ts_ist.strftime("%Y-%m-%d")
+                except Exception:
+                    now = _ist_now()
+                    last_updated_str = now.strftime('%Y-%m-%d %H:%M:%S %Z')
+                    date_str = now.strftime('%Y-%m-%d')
 
-            live_data = {
-                'ticker': ticker,
-                'company_name': info.get('longName', ticker),
-                'current_price': float(latest['Close']) if latest.get('Close') is not None else float(latest["Close"]),
-                'open_price': float(latest['Open']) if latest.get('Open') is not None else float(latest["Open"]),
-                'high_price': float(latest['High']) if latest.get('High') is not None else float(latest["High"]),
-                'low_price': float(latest['Low']) if latest.get('Low') is not None else float(latest["Low"]),
-                'previous_close': float(previous_close),
-                'volume': int(latest['Volume']),
-                'market_status': market_status,
-                'last_updated': last_updated_str,
-                'date': date_str,
-                'data_index_timestamp_utc': data_ts.isoformat() if data_ts is not None else None
-            }
+                # Safely extract numeric fields
+                def _safe_get(row, col, cast=float, default=0):
+                    try:
+                        val = row[col]
+                        if pd.isna(val):
+                            return default
+                        return cast(val)
+                    except Exception:
+                        return default
 
-            return live_data
-        except Exception as e:
-            logger.exception("Live data fetch failed for %s: %s", ticker, e)
-            try:
-                demo_data = self._get_demo_data(ticker, is_fallback=True)
-                demo_data['data_source'] = 'Demo fallback after live fetch failure'
-                return demo_data
-            except Exception as fallback_e:
-                logger.exception("Demo fallback generation failed for %s: %s", ticker, fallback_e)
-                return {
-                    'ticker': str(ticker),
-                    'company_name': str(ticker),
-                    'current_price': 0.0,
-                    'open_price': 0.0,
-                    'high_price': 0.0,
-                    'low_price': 0.0,
-                    'previous_close': 0.0,
-                    'volume': 0,
-                    'market_status': '[CLOSED] (Demo)',
-                    'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    'date': datetime.now().strftime("%Y-%m-%d"),
-                    'is_demo': True,
-                    'is_fallback': True,
-                    'data_source': 'Hard fallback data'
+                previous_close = _safe_get(latest, 'Close', float, 0.0)
+                if len(data) > 1:
+                    try:
+                        previous_close = float(data.iloc[-2]['Close'])
+                    except Exception:
+                        pass
+
+                live_data = {
+                    'ticker': ticker,
+                    'company_name': info.get('longName', ticker),
+                    'current_price': _safe_get(latest, 'Close', float, 0.0),
+                    'open_price': _safe_get(latest, 'Open', float, 0.0),
+                    'high_price': _safe_get(latest, 'High', float, 0.0),
+                    'low_price': _safe_get(latest, 'Low', float, 0.0),
+                    'previous_close': float(previous_close),
+                    'volume': int(_safe_get(latest, 'Volume', int, 0)),
+                    'market_status': _market_status_for(_ist_now()),
+                    'last_updated': last_updated_str,
+                    'date': date_str,
+                    'data_index_timestamp_utc': data_ts.isoformat() if data_ts is not None else None,
+                    'data_source': 'Yahoo'
                 }
+                return live_data
+
+        except Exception as e:
+            logger.debug('Yahoo fetch failed for %s: %s', ticker, e)
+            # if Yahoo failed due to 401/Unauthorized or network, we'll try alternative providers
+
+        # 2) Try Alpha Vantage if API key provided
+        alpha_result = _try_alpha_vantage(yahoo_ticker)
+        if alpha_result:
+            return alpha_result
+
+        # 3) Try TwelveData if API key provided
+        td_result = _try_twelvedata(yahoo_ticker)
+        if td_result:
+            return td_result
+
+        # 4) As a last resort, return demo fallback
+        logger.info('All live providers failed for %s; returning demo fallback', ticker)
+        try:
+            demo_data = self._get_demo_data(ticker, is_fallback=True)
+            demo_data['data_source'] = 'Demo fallback after all providers failed'
+            demo_data['is_fallback'] = True
+            return demo_data
+        except Exception as fallback_e:
+            logger.exception('Demo fallback generation failed for %s: %s', ticker, fallback_e)
+            return {
+                'ticker': str(ticker),
+                'company_name': str(ticker),
+                'current_price': 0.0,
+                'open_price': 0.0,
+                'high_price': 0.0,
+                'low_price': 0.0,
+                'previous_close': 0.0,
+                'volume': 0,
+                'market_status': '[CLOSED] (Demo)',
+                'last_updated': _ist_now().strftime('%Y-%m-%d %H:%M:%S %Z'),
+                'date': _ist_now().strftime('%Y-%m-%d'),
+                'is_demo': True,
+                'is_fallback': True,
+                'data_source': 'Hard fallback data'
+            }
     
     def fetch_historical_data(self, ticker, days=HISTORICAL_DAYS):
         """
