@@ -1,0 +1,22 @@
+# Template systemd unit file to run docker-compose as a service.
+# Copy this to /etc/systemd/system/finsightai.service and update paths.
+
+[Unit]
+Description=FinSight AI (docker-compose)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=notify
+WorkingDirectory=/home/<user>/finsightai   # <- REPLACE with the full path to the project on your VPS
+Environment="COMPOSE_FILE=/home/<user>/finsightai/docker-compose.yml"
+TimeoutStartSec=0
+Restart=always
+RestartSec=5s
+
+# Start docker-compose in detached mode
+ExecStart=/usr/bin/docker-compose -f /home/<user>/finsightai/docker-compose.yml up -d --build
+ExecStop=/usr/bin/docker-compose -f /home/<user>/finsightai/docker-compose.yml down
+
+[Install]
+WantedBy=multi-user.target

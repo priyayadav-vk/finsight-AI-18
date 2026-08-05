@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+.venv311/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# Streamlit cache
+.streamlit/
+
+# Model files (optional if too large)
+*.pkl
+
+# Large output files
+output.txt
+
+# Logs
+*.log

@@ -1,0 +1,17 @@
+{
+  "Apple Inc.": {
+    "NSE": "AAPL"
+  },
+  "Microsoft Corporation": {
+    "NSE": "MSFT"
+  },
+  "Alphabet Inc.": {
+    "NSE": "GOOGL"
+  },
+  "Amazon.com Inc.": {
+    "NSE": "AMZN"
+  },
+  "NVIDIA Corporation": {
+    "NSE": "NVDA"
+  }
+}

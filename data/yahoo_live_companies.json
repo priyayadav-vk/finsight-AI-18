@@ -1,0 +1,782 @@
+{
+  "Abbott India": {
+    "NSE": "ABBOTINDIA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Adani Enterprises": {
+    "NSE": "ADANIENT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Infrastructure"
+  },
+  "Adani Ports": {
+    "NSE": "ADANIPORTS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Ports"
+  },
+  "Adani Power": {
+    "NSE": "ADANIPOWER.NS",
+    "BSE": "999999999.BO",
+    "sector": "Power"
+  },
+  "Adani Green Energy": {
+    "NSE": "ADANIGREEN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "Aarti Industries": {
+    "NSE": "AARTIIND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "ABB India": {
+    "NSE": "ABB.NS",
+    "BSE": "999999999.BO",
+    "sector": "Industrial"
+  },
+  "Aditya Birla Fashion": {
+    "NSE": "ABFRL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Retail"
+  },
+  "Ajanta Pharma": {
+    "NSE": "AJANTPHARM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Alicon Castalloy": {
+    "NSE": "ALICON.NS",
+    "BSE": "999999999.BO",
+    "sector": "Manufacturing"
+  },
+  "Alkem Laboratories": {
+    "NSE": "ALKEM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Allcargo Logistics": {
+    "NSE": "ALLCARGO.NS",
+    "BSE": "999999999.BO",
+    "sector": "Logistics"
+  },
+  "Apar Industries": {
+    "NSE": "APARINDS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Arvind Limited": {
+    "NSE": "ARVIND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Textiles"
+  },
+  "Ashiana Housing": {
+    "NSE": "ASHIANA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Real Estate"
+  },
+  "Atul Limited": {
+    "NSE": "ATUL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Aurobindo Pharma": {
+    "NSE": "AUROPHARMA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "BASF India": {
+    "NSE": "BASF.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "BEML Limited": {
+    "NSE": "BEML.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Bharat Dynamics": {
+    "NSE": "BDL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Defense"
+  },
+  "Bharat Electronics": {
+    "NSE": "BEL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Defense"
+  },
+  "Bharat Forge": {
+    "NSE": "BHARATFORG.NS",
+    "BSE": "999999999.BO",
+    "sector": "Auto Components"
+  },
+  "Bharat Heavy Electricals": {
+    "NSE": "BHEL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Bharat Rasayan": {
+    "NSE": "BHARATRAS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Blue Star": {
+    "NSE": "BLUESTARCO.NS",
+    "BSE": "999999999.BO",
+    "sector": "Consumer Durables"
+  },
+  "Bombay Burmah Trading": {
+    "NSE": "BBTC.NS",
+    "BSE": "999999999.BO",
+    "sector": "Plantations"
+  },
+  "Can Fin Homes": {
+    "NSE": "CANFINHOME.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Caplin Point Laboratories": {
+    "NSE": "CAPLIPOINT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Carborundum Universal": {
+    "NSE": "CARBORUNIV.NS",
+    "BSE": "999999999.BO",
+    "sector": "Materials"
+  },
+  "Chambal Fertilizers": {
+    "NSE": "CHAMBLFERT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Fertilizers"
+  },
+  "Chennai Petrochem": {
+    "NSE": "CHENNPETRO.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "Cochin Shipyard": {
+    "NSE": "COCHINSHIP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Shipbuilding"
+  },
+  "Crompton Greaves": {
+    "NSE": "CROMPTON.NS",
+    "BSE": "999999999.BO",
+    "sector": "Consumer Durables"
+  },
+  "Cummins India": {
+    "NSE": "CUMMINSIND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Dalmia Bharat": {
+    "NSE": "DALBHARAT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Cement"
+  },
+  "Delta Corp": {
+    "NSE": "DELTACORP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Gaming"
+  },
+  "Dish TV": {
+    "NSE": "DISHTV.NS",
+    "BSE": "999999999.BO",
+    "sector": "Media"
+  },
+  "DLF Limited": {
+    "NSE": "DLF.NS",
+    "BSE": "999999999.BO",
+    "sector": "Real Estate"
+  },
+  "Edelweiss Financial": {
+    "NSE": "EDELWEISS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Elgi Equipments": {
+    "NSE": "ELGIEQUIP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Endurance Technologies": {
+    "NSE": "ENDURANCE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Auto Components"
+  },
+  "Equitas Small Finance Bank": {
+    "NSE": "EQUITASBNK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Eris Lifesciences": {
+    "NSE": "ERIS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Escorts Kubota": {
+    "NSE": "ESCORTS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "FDC Limited": {
+    "NSE": "FDC.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Firstsource Solutions": {
+    "NSE": "FSL.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Garden Reach Shipbuilders": {
+    "NSE": "GRSE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Defense"
+  },
+  "Glenmark Pharma": {
+    "NSE": "GLENMARK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Godfrey Phillips": {
+    "NSE": "GODFRYPHLP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Tobacco"
+  },
+  "Gokaldas Exports": {
+    "NSE": "GOKEX.NS",
+    "BSE": "999999999.BO",
+    "sector": "Textiles"
+  },
+  "Granules India": {
+    "NSE": "GRANULES.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "HFCL Limited": {
+    "NSE": "HFCL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Telecom"
+  },
+  "Himadri Speciality": {
+    "NSE": "HSCL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Indiamart Intermesh": {
+    "NSE": "INDIAMART.NS",
+    "BSE": "999999999.BO",
+    "sector": "E-commerce"
+  },
+  "Indian Renewable Energy": {
+    "NSE": "IREDA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "Jindal Saw": {
+    "NSE": "JINDALSAW.NS",
+    "BSE": "999999999.BO",
+    "sector": "Steel"
+  },
+  "KEI Industries": {
+    "NSE": "KEI.NS",
+    "BSE": "999999999.BO",
+    "sector": "Electrical"
+  },
+  "KFin Technologies": {
+    "NSE": "KFINTECH.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "KPR Mill": {
+    "NSE": "KPRMILL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Textiles"
+  },
+  "LaOpala": {
+    "NSE": "LAOPALA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Consumer Goods"
+  },
+  "L&T Technology Services": {
+    "NSE": "LTTS.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Mahindra Holidays": {
+    "NSE": "MHRIL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Hospitality"
+  },
+  "Mahindra Lifespace": {
+    "NSE": "MAHLIFE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Real Estate"
+  },
+  "Manappuram Finance": {
+    "NSE": "MANAPPURAM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Metropolis Healthcare": {
+    "NSE": "METROPOLIS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Mold-Tek Packaging": {
+    "NSE": "MOLDTECH.NS",
+    "BSE": "999999999.BO",
+    "sector": "Packaging"
+  },
+  "Narayana Hrudayalaya": {
+    "NSE": "NH.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "NLC India": {
+    "NSE": "NLCINDIA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "One 97 Communications": {
+    "NSE": "PAYTM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Fintech"
+  },
+  "Patanjali Foods": {
+    "NSE": "PATANJALI.NS",
+    "BSE": "999999999.BO",
+    "sector": "Food"
+  },
+  "Piramal Pharma": {
+    "NSE": "PPLPHARMA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Poonawalla Fincorp": {
+    "NSE": "POONAWALLA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "RBL Bank": {
+    "NSE": "RBLBANK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Relaxo Footwears": {
+    "NSE": "RELAXO.NS",
+    "BSE": "999999999.BO",
+    "sector": "Consumer Goods"
+  },
+  "RITES Limited": {
+    "NSE": "RITES.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Rossari Biotech": {
+    "NSE": "ROSSARI.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "SBI Life": {
+    "NSE": "SBILIFE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Insurance"
+  },
+  "Schaeffler India": {
+    "NSE": "SCHAEFFLER.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Sharda Cropchem": {
+    "NSE": "SHARDACROP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Agrochemicals"
+  },
+  "Shoppers Stop": {
+    "NSE": "SHOPERSTOP.NS",
+    "BSE": "999999999.BO",
+    "sector": "Retail"
+  },
+  "Solar Industries": {
+    "NSE": "SOLARINDS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Defense"
+  },
+  "Star Health": {
+    "NSE": "STARHEALTH.NS",
+    "BSE": "999999999.BO",
+    "sector": "Insurance"
+  },
+  "Sundaram Finance": {
+    "NSE": "SUNDARMFIN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Sundram Fasteners": {
+    "NSE": "SUNDRMFAST.NS",
+    "BSE": "999999999.BO",
+    "sector": "Auto Components"
+  },
+  "Suprajit Engineering": {
+    "NSE": "SUPRAJIT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Auto Components"
+  },
+  "Tata Communications": {
+    "NSE": "TATACOMM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Telecom"
+  },
+  "Tata Investment Corporation": {
+    "NSE": "TATAINVEST.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Tata Power": {
+    "NSE": "TATAPOWER.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "Tata Teleservices": {
+    "NSE": "TTML.NS",
+    "BSE": "999999999.BO",
+    "sector": "Telecom"
+  },
+  "Tejas Networks": {
+    "NSE": "TEJASNET.NS",
+    "BSE": "999999999.BO",
+    "sector": "Telecom"
+  },
+  "The Phoenix Mills": {
+    "NSE": "PHOENIXLTD.NS",
+    "BSE": "999999999.BO",
+    "sector": "Real Estate"
+  },
+  "Timken India": {
+    "NSE": "TIMKEN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "Trent Limited": {
+    "NSE": "TRENT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Retail"
+  },
+  "Tube Investments": {
+    "NSE": "TIINDIA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "V-Guard Industries": {
+    "NSE": "VGUARD.NS",
+    "BSE": "999999999.BO",
+    "sector": "Consumer Durables"
+  },
+  "Vipul Limited": {
+    "NSE": "VIPULLTD.NS",
+    "BSE": "999999999.BO",
+    "sector": "Real Estate"
+  },
+  "Wockhardt": {
+    "NSE": "WOCKPHARMA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Yes Bank": {
+    "NSE": "YESBANK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Zensar Technologies": {
+    "NSE": "ZENSARTECH.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Zota Health": {
+    "NSE": "ZOTA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Happiest Minds": {
+    "NSE": "HAPPSTMNDS.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Laurus Labs": {
+    "NSE": "LAURUSLABS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Mankind Pharma": {
+    "NSE": "MANKIND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Persistent Systems": {
+    "NSE": "PERSISTENT.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "KPIT Technologies": {
+    "NSE": "KPITTECH.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Coforge": {
+    "NSE": "COFORGE.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Mphasis": {
+    "NSE": "MPHASIS.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "AIA Engineering": {
+    "NSE": "AIAENG.NS",
+    "BSE": "999999999.BO",
+    "sector": "Engineering"
+  },
+  "NCC Limited": {
+    "NSE": "NCC.NS",
+    "BSE": "999999999.BO",
+    "sector": "Infrastructure"
+  },
+  "Mahanagar Gas": {
+    "NSE": "MGL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Gas"
+  },
+  "Jindal Stainless": {
+    "NSE": "JSL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Steel"
+  },
+  "UCO Bank": {
+    "NSE": "UCOBANK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Vedanta Limited": {
+    "NSE": "VEDL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Mining"
+  },
+  "NMDC Limited": {
+    "NSE": "NMDC.NS",
+    "BSE": "999999999.BO",
+    "sector": "Mining"
+  },
+  "BSE Limited": {
+    "NSE": "BSE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Financial Services"
+  },
+  "Jio Financial Services": {
+    "NSE": "JIOFIN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Aster DM Healthcare": {
+    "NSE": "ASTERDM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Fortis Healthcare": {
+    "NSE": "FORTIS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Max Healthcare": {
+    "NSE": "MAXHEALTH.NS",
+    "BSE": "999999999.BO",
+    "sector": "Healthcare"
+  },
+  "Lemon Tree Hotels": {
+    "NSE": "LEMONTREE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Hospitality"
+  },
+  "Navin Fluorine International": {
+    "NSE": "NAVINFLUOR.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Aegis Logistics": {
+    "NSE": "AEGISLOG.NS",
+    "BSE": "999999999.BO",
+    "sector": "Logistics"
+  },
+  "Prince Pipes and Fittings": {
+    "NSE": "PRINCEPIPE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Plastics"
+  },
+  "Sapphire Foods": {
+    "NSE": "SAPPHIRE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Food"
+  },
+  "Jubilant Pharmova": {
+    "NSE": "JUBLPHARMA.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Polycab India": {
+    "NSE": "POLYCAB.NS",
+    "BSE": "999999999.BO",
+    "sector": "Electrical"
+  },
+  "Angel One": {
+    "NSE": "ANGELONE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Dixon Technologies": {
+    "NSE": "DIXON.NS",
+    "BSE": "999999999.BO",
+    "sector": "Electronics"
+  },
+  "Tata Chemicals": {
+    "NSE": "TATACHEM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Bharat Petroleum": {
+    "NSE": "BPCL.NS",
+    "BSE": "999999999.BO",
+    "sector": "Energy"
+  },
+  "Bandhan Bank": {
+    "NSE": "BANDHANBNK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "IDFC First Bank": {
+    "NSE": "IDFCFIRSTB.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Punjab National Bank": {
+    "NSE": "PNB.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Indian Railway Finance": {
+    "NSE": "IRFC.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Shriram Finance": {
+    "NSE": "SHRIRAMFIN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "AU Small Finance Bank": {
+    "NSE": "AUBANK.NS",
+    "BSE": "999999999.BO",
+    "sector": "Banking"
+  },
+  "Bajaj Housing Finance": {
+    "NSE": "BAJAJHLDNG.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Cholamandalam Investment": {
+    "NSE": "CHOLAFIN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Muthoot Finance": {
+    "NSE": "MUTHOOTFIN.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Home First Finance": {
+    "NSE": "HOMEFIRST.NS",
+    "BSE": "999999999.BO",
+    "sector": "Finance"
+  },
+  "Avenue Supermarts": {
+    "NSE": "DMART.NS",
+    "BSE": "999999999.BO",
+    "sector": "Retail"
+  },
+  "Trent": {
+    "NSE": "TRENT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Retail"
+  },
+  "Eicher Motors": {
+    "NSE": "EICHERMOT.NS",
+    "BSE": "999999999.BO",
+    "sector": "Automobile"
+  },
+  "Bajaj Auto": {
+    "NSE": "BAJAJ-AUTO.NS",
+    "BSE": "999999999.BO",
+    "sector": "Automobile"
+  },
+  "TVS Motor": {
+    "NSE": "TVSMOTOR.NS",
+    "BSE": "999999999.BO",
+    "sector": "Automobile"
+  },
+  "Apollo Tyres": {
+    "NSE": "APOLLOTYRE.NS",
+    "BSE": "999999999.BO",
+    "sector": "Tyres"
+  },
+  "MRF": {
+    "NSE": "MRF.NS",
+    "BSE": "999999999.BO",
+    "sector": "Tyres"
+  },
+  "Balkrishna Industries": {
+    "NSE": "BALKRISIND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Tyres"
+  },
+  "SRF": {
+    "NSE": "SRF.NS",
+    "BSE": "999999999.BO",
+    "sector": "Chemicals"
+  },
+  "Aarti Drugs": {
+    "NSE": "AARTIDRUGS.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "Gland Pharma": {
+    "NSE": "GLAND.NS",
+    "BSE": "999999999.BO",
+    "sector": "Pharma"
+  },
+  "The Ramco Cements": {
+    "NSE": "RAMCOCEM.NS",
+    "BSE": "999999999.BO",
+    "sector": "Cement"
+  },
+  "Wipro": {
+    "NSE": "WIPRO.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "HCL Tech": {
+    "NSE": "HCLTECH.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Tech Mahindra": {
+    "NSE": "TECHM.NS",
+    "BSE": "999999999.BO",
+    "sector": "IT"
+  },
+  "Jubilant FoodWorks": {
+    "NSE": "JUBLFOOD.NS",
+    "BSE": "999999999.BO",
+    "sector": "Food"
+  }
+}
