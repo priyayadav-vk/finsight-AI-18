@@ -15,6 +15,21 @@ def show():
     """Display Dashboard page"""
     
     # Top section removed per user request — start directly at Company Selection
+    # Load API keys from Streamlit secrets into environment so the backend DataFetcher can use them
+    import os
+    try:
+        # Streamlit stores secrets in st.secrets; copy relevant keys to os.environ if present
+        for _k in ('ALPHAVANTAGE_API_KEY', 'TWELVEDATA_API_KEY'):
+            try:
+                v = st.secrets.get(_k) if isinstance(st.secrets, dict) else st.secrets.get(_k)
+            except Exception:
+                v = None
+            if v:
+                os.environ.setdefault(_k, v)
+    except Exception:
+        # Older Streamlit may not expose st.secrets as dict-like; ignore failures
+        pass
+
     # Initialize DataFetcher (used later for refresh and live data)
     fetcher = DataFetcher()
 
@@ -166,20 +181,29 @@ def show():
                 return
              
             # Display data source indicator
-            if live_data.get('is_demo'):
-                data_source = live_data.get('data_source', 'Synthetic Data')
+            data_source = live_data.get('data_source', 'Unknown')
+            is_demo = bool(live_data.get('is_demo'))
+
+            if is_demo or 'Demo' in str(data_source) or 'fallback' in str(data_source).lower():
                 st.warning(f"""
                 ⚠️ **Data Source Alert**: {data_source}
-                 
-                Real-time Yahoo Finance data is currently unavailable for {ticker}.
-                The displayed data is synthetically generated for demonstration purposes.
-                **Predictions and analysis based on this data may not be reliable.**
+
+                Live provider(s) were not available for `{ticker}`.
+                The displayed numbers are synthetic/demo values used for demonstrations.
+                To use live data during your presentation, set a free API key (Alpha Vantage or TwelveData) in Streamlit Cloud Secrets and redeploy.
                 """)
+
+                with st.expander('How to add a free Alpha Vantage key (recommended)'):
+                    st.markdown('''
+                    1. Create a free account at https://www.alphavantage.co/ and obtain an API key.
+                    2. In Streamlit Cloud: App → Settings → Secrets, add a new secret named `ALPHAVANTAGE_API_KEY` with the key value.
+                    3. Redisplay the app; it will automatically use Alpha Vantage as a fallback provider.
+                    ''')
             else:
                 st.success(f"""
-                ✓ **Real-Time Data**: Yahoo Finance
-                 
-                Source: {live_data.get('data_source', 'Yahoo Finance')}
+                ✓ **Live Data**: {data_source}
+
+                Source: {data_source}
                 """)
              
             # Store in session state for other pages
