@@ -195,6 +195,32 @@ def show():
                 else:
                     st.error(f"Yahoo unavailable: {probe_result.get('message')}")
 
+        # Verbose diagnostic button
+        if st.button('Verbose Yahoo diagnostic', key='verbose_yahoo'):
+            with st.spinner('Running verbose Yahoo diagnostic...'):
+                try:
+                    diag = fetcher.yahoo_verbose_probe([ticker])
+                except Exception as d_ex:
+                    diag = {ticker: {'error': str(d_ex)}}
+                st.session_state['yahoo_verbose_diag'] = diag
+                # Display results
+                for sym, report in diag.items():
+                    with st.expander(f"Verbose diagnostic for {sym}"):
+                        st.json(report)
+
+        # Pre-warm cache button
+        if st.button('Pre-warm cache (popular tickers)', key='prewarm'):
+            popular = ['RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS']
+            with st.spinner('Pre-warming cache for popular tickers...'):
+                prewarm_results = {}
+                for pt in popular:
+                    try:
+                        prewarm_results[pt] = fetcher.fetch_live_data(pt)
+                    except Exception as pw_e:
+                        prewarm_results[pt] = {'error': str(pw_e)}
+                st.session_state['prewarm_results'] = prewarm_results
+                st.success('Pre-warm complete; cached results stored where possible.')
+
     # Small spacer
     st.markdown('')
     

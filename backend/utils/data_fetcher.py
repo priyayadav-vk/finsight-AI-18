@@ -156,6 +156,65 @@ class DataFetcher:
             'last_checked': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
+    def yahoo_verbose_probe(self, tickers):
+        """
+        Run verbose HTTP diagnostics against Yahoo endpoints for the provided tickers.
+        Returns a mapping ticker -> diagnostic dict with status codes, headers and small body snippets.
+        """
+        results = {}
+        import requests
+        for t in (tickers or []):
+            sym = self._resolve_ticker_for_yahoo(t)
+            diag = {'ticker': t, 'resolved': sym, 'steps': []}
+            try:
+                session = requests.Session()
+                base_headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                }
+                # 1) GET quote page
+                quote_page = f'https://finance.yahoo.com/quote/{sym}'
+                try:
+                    r = session.get(quote_page, headers=base_headers, timeout=10)
+                    diag['steps'].append({'step': 'quote_page_get', 'status_code': r.status_code, 'reason': r.reason, 'content_type': r.headers.get('Content-Type'), 'snippet': (r.text[:1000] if r.text else '')})
+                except Exception as e:
+                    diag['steps'].append({'step': 'quote_page_get', 'error': str(e)})
+
+                # 2) Chart endpoint
+                chart_url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=5d&interval=1d'
+                headers = dict(base_headers)
+                headers['Referer'] = quote_page
+                headers['Accept'] = 'application/json, text/javascript, */*; q=0.01'
+                try:
+                    r2 = session.get(chart_url, headers=headers, timeout=10)
+                    snippet = ''
+                    try:
+                        snippet = r2.text[:2000]
+                    except Exception:
+                        snippet = ''
+                    diag['steps'].append({'step': 'chart_endpoint', 'status_code': r2.status_code, 'reason': r2.reason, 'content_type': r2.headers.get('Content-Type'), 'snippet': snippet})
+                except Exception as e:
+                    diag['steps'].append({'step': 'chart_endpoint', 'error': str(e)})
+
+                # 3) Quote endpoint
+                quote_url = f'https://query1.finance.yahoo.com/v7/finance/quote?symbols={sym}'
+                try:
+                    r3 = session.get(quote_url, headers=headers, timeout=10)
+                    snippet = ''
+                    try:
+                        snippet = r3.text[:2000]
+                    except Exception:
+                        snippet = ''
+                    diag['steps'].append({'step': 'quote_endpoint', 'status_code': r3.status_code, 'reason': r3.reason, 'content_type': r3.headers.get('Content-Type'), 'snippet': snippet})
+                except Exception as e:
+                    diag['steps'].append({'step': 'quote_endpoint', 'error': str(e)})
+
+            except Exception as ex:
+                diag['error'] = str(ex)
+            results[t] = diag
+        return results
+
     def _resolve_ticker_for_yahoo(self, ticker):
         """
         Normalize market symbols so Yahoo Finance can resolve them reliably.
