@@ -9,7 +9,7 @@ import time
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import warnings
 import io
 from contextlib import redirect_stdout, redirect_stderr
@@ -203,25 +203,42 @@ class DataFetcher:
             # Get additional info
             info = stock.info if hasattr(stock, 'info') else {}
             
-            # Get market status (Open/Closed)
-            now = datetime.now()
-            market_open_time = now.replace(hour=9, minute=15, second=0)
-            market_close_time = now.replace(hour=15, minute=30, second=0)
-            
-            if now.weekday() < 5:  # Weekday (Monday=0 to Friday=4)
-                if market_open_time <= now <= market_close_time:
+            # Get market status (Open/Closed) using server time but present timestamps in IST
+            server_now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+            market_open_time = server_now.replace(hour=9, minute=15, second=0, microsecond=0)
+            market_close_time = server_now.replace(hour=15, minute=30, second=0, microsecond=0)
+
+            if server_now.weekday() < 5:  # Weekday (Monday=0 to Friday=4)
+                if market_open_time <= server_now <= market_close_time:
                     market_status = "[OPEN]"
                 else:
                     market_status = "[CLOSED]"
             else:
                 market_status = "[CLOSED] (Weekend)"
-            
+
             previous_close = latest['Close']
             if hasattr(data, 'shape') and len(data) > 1:
                 try:
                     previous_close = data.iloc[-2]['Close']
                 except Exception:
                     previous_close = latest['Close']
+
+            # Prefer the timestamp embedded in the data index if available
+            data_ts = None
+            try:
+                data_index = latest.name
+                data_ts = pd.to_datetime(data_index)
+                # If no timezone info, assume UTC
+                if data_ts.tzinfo is None:
+                    data_ts = data_ts.replace(tzinfo=timezone.utc)
+                # Convert to IST for display
+                data_ts_ist = data_ts.astimezone(timezone(timedelta(hours=5, minutes=30)))
+                last_updated_str = data_ts_ist.strftime("%Y-%m-%d %H:%M:%S %Z")
+                date_str = data_ts_ist.strftime("%Y-%m-%d")
+            except Exception:
+                data_ts = None
+                last_updated_str = server_now.strftime("%Y-%m-%d %H:%M:%S %Z")
+                date_str = server_now.strftime("%Y-%m-%d")
 
             live_data = {
                 'ticker': ticker,
@@ -233,10 +250,11 @@ class DataFetcher:
                 'previous_close': float(previous_close),
                 'volume': int(latest['Volume']),
                 'market_status': market_status,
-                'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'date': latest.name.strftime("%Y-%m-%d")
+                'last_updated': last_updated_str,
+                'date': date_str,
+                'data_index_timestamp_utc': data_ts.isoformat() if data_ts is not None else None
             }
-            
+
             return live_data
         except Exception as e:
             logger.exception("Live data fetch failed for %s: %s", ticker, e)
@@ -396,15 +414,16 @@ class DataFetcher:
         previous_close = current_price + np.random.uniform(-200, 200)
         volume = int(np.random.randint(100000, 10000000))
         
-        now = datetime.now()
-        market_open_time = now.replace(hour=9, minute=15, second=0)
-        market_close_time = now.replace(hour=15, minute=30, second=0)
-        
-        if now.weekday() < 5 and market_open_time <= now <= market_close_time:
+        # Present demo timestamps in IST so UI matches expected local times
+        server_now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+        market_open_time = server_now.replace(hour=9, minute=15, second=0, microsecond=0)
+        market_close_time = server_now.replace(hour=15, minute=30, second=0, microsecond=0)
+
+        if server_now.weekday() < 5 and market_open_time <= server_now <= market_close_time:
             market_status = "[OPEN] (Demo)"
         else:
             market_status = "[CLOSED] (Demo)"
-        
+
         return {
             'ticker': ticker,
             'company_name': company_name,
@@ -415,8 +434,8 @@ class DataFetcher:
             'previous_close': round(float(previous_close), 2),
             'volume': volume,
             'market_status': market_status,
-            'last_updated': now.strftime("%Y-%m-%d %H:%M:%S"),
-            'date': now.strftime("%Y-%m-%d"),
+            'last_updated': server_now.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            'date': server_now.strftime("%Y-%m-%d"),
             'is_demo': True,
             'is_fallback': bool(is_fallback)
         }
