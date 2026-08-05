@@ -545,6 +545,45 @@ class DataFetcher:
                 if live_mapping is not None:
                     return live_mapping
 
+                # If a verified catalog file is present in the repository, use it as a reliable
+                # fallback mapping even when Yahoo probes fail (improves Cloud reliability).
+                if os.path.exists(verified_file):
+                    try:
+                        with open(verified_file, 'r', encoding='utf-8') as fh:
+                            raw = json.load(fh)
+                        mapping = {}
+                        if isinstance(raw, dict):
+                            if universe == 'foreign':
+                                for name, tick_info in raw.items():
+                                    if is_blocked_company_name(name):
+                                        continue
+                                    if isinstance(tick_info, str):
+                                        mapping[name] = {'NSE': tick_info}
+                                    elif isinstance(tick_info, dict):
+                                        t = tick_info.get('ticker') or tick_info.get('TICKER') or tick_info.get('NSE')
+                                        if t:
+                                            mapping[name] = {'NSE': t}
+                            else:
+                                for name, tick_info in raw.items():
+                                    if is_blocked_company_name(name):
+                                        continue
+                                    if isinstance(tick_info, dict):
+                                        n = {
+                                            'NSE': tick_info.get('NSE') or tick_info.get('nse'),
+                                            'BSE': tick_info.get('BSE') or tick_info.get('bse') or '999999999.BO',
+                                            'sector': tick_info.get('sector', 'General')
+                                        }
+                                        if n['NSE']:
+                                            mapping[name] = n
+                                    elif isinstance(tick_info, str):
+                                        # raw entry is a plain ticker string
+                                        mapping[name] = {'NSE': tick_info}
+                        if mapping:
+                            return mapping
+                    except Exception:
+                        # If verified file cannot be read for any reason, continue to try cached data below
+                        pass
+
                 cache_data = self._load_availability_cache()
                 timestamp = cache_data.get('timestamp')
                 supported = cache_data.get('supported_companies')
