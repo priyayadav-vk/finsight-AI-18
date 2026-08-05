@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from backend.config import INDIAN_COMPANIES, THEME, THRESHOLD_OPTIONS, DEFAULT_THRESHOLD
+from backend.config import INDIAN_COMPANIES, THEME, THRESHOLD_OPTIONS, DEFAULT_THRESHOLD, STREAMLIT_CLOUD_MODE
 from backend.utils.data_fetcher import DataFetcher
 from backend.utils.features import FeatureEngineer
 from backend.utils.model_predictor import ModelPredictor
@@ -106,47 +106,104 @@ def show():
         # Initialize predictor
         predictor = ModelPredictor(company_name, ticker)
 
-        # Try to load model. If it is missing or incompatible, train a fresh one.
+        # Try to load model. If it is missing or incompatible, either train a fresh one
+        # or (when STREAMLIT_CLOUD_MODE is enabled) use a lightweight demo heuristic.
+        cloud_demo = False
         if not predictor.load_model():
-            st.info("Training a fresh model for this stock because the previous model was missing or incompatible...")
-            X, y = predictor.trainer.prepare_training_data(features_df)
-            if len(X) > 50:
-                predictor.trainer.train_model(X, y)
-                predictor.trainer.save_model()
+            if STREAMLIT_CLOUD_MODE:
+                cloud_demo = True
+                st.info("Model file not found. Using lightweight demo prediction (Streamlit Cloud safe).")
+                # Use a simple recent-returns mean as a demo predicted return
+                last_close = float(hist_data['Close'].iloc[-1]) if 'Close' in hist_data.columns else None
+                if last_close is None:
+                    st.error("No close price available to produce a demo prediction.")
+                    return
+                predicted_return = 0.0
+                if 'Return' in features_df.columns:
+                    recent = features_df['Return'].dropna().tail(20)
+                    if len(recent) > 0:
+                        predicted_return = float(recent.mean())
+                predicted_price = last_close * (1.0 + predicted_return)
+                prediction = {
+                    'predicted_return': predicted_return,
+                    'predicted_price': predicted_price,
+                    'current_price': last_close,
+                    'price_change': predicted_price - last_close,
+                    'change_percent': predicted_return * 100,
+                }
+
+                # Simple advisory signal based on threshold_value
+                if predicted_return > threshold_value:
+                    signal_type = 'BUY'
+                    recommendation = f"Predicted return {predicted_return:.2%} > threshold"
+                elif predicted_return < -threshold_value:
+                    signal_type = 'SELL'
+                    recommendation = f"Predicted return {predicted_return:.2%} < -threshold"
+                else:
+                    signal_type = 'HOLD'
+                    recommendation = f"Predicted return {predicted_return:.2%} near threshold"
+
+                analysis = {
+                    'prediction': prediction,
+                    'signal': {
+                        'signal': signal_type,
+                        'recommendation': recommendation,
+                        'reason': 'Demo heuristic (recent returns mean) because model file is unavailable.',
+                        'confidence': max(0.01, min(0.5, abs(predicted_return)))
+                    },
+                    'targets': {
+                        'entry_price': last_close,
+                        'target_price': predicted_price,
+                        'conservative_target': last_close * (1 + predicted_return * 0.5),
+                        'aggressive_target': last_close * (1 + predicted_return * 1.5),
+                        'stop_loss': last_close * (1 - abs(predicted_return) * 1.0),
+                    }
+                }
             else:
-                st.error("Not enough data to train model")
+                st.info("Training a fresh model for this stock because the previous model was missing or incompatible...")
+                X, y = predictor.trainer.prepare_training_data(features_df)
+                if len(X) > 50:
+                    predictor.trainer.train_model(X, y)
+                    predictor.trainer.save_model()
+                else:
+                    st.error("Not enough data to train model")
+                    return
+
+        # If not in cloud_demo mode, make prediction using the model
+        if not cloud_demo:
+            # Make prediction using the latest market price when available.
+            live_current_price = None
+            if live_data is not None and isinstance(live_data, dict):
+                try:
+                    live_current_price = float(live_data.get("current_price"))
+                except (TypeError, ValueError):
+                    live_current_price = None
+
+            prediction = predictor.predict_next_price(
+                features_df,
+                current_price_override=live_current_price,
+                latest_volatility=float(features_df.iloc[-1]["Volatility"]) if "Volatility" in features_df.columns else None,
+            )
+
+            if live_current_price is not None and prediction is not None:
+                prediction["current_price"] = live_current_price
+                prediction["predicted_price"] = live_current_price * (1 + prediction.get("predicted_return", 0.0))
+                prediction["price_change"] = prediction["predicted_price"] - live_current_price
+                prediction["change_percent"] = prediction.get("predicted_return", 0.0) * 100
+
+            if prediction is None:
+                st.error("Could not make prediction")
                 return
 
-        # Make prediction using the latest market price when available.
-        live_current_price = None
-        if live_data is not None and isinstance(live_data, dict):
-            try:
-                live_current_price = float(live_data.get("current_price"))
-            except (TypeError, ValueError):
-                live_current_price = None
-
-        prediction = predictor.predict_next_price(
-            features_df,
-            current_price_override=live_current_price,
-            latest_volatility=float(features_df.iloc[-1]["Volatility"]) if "Volatility" in features_df.columns else None,
-        )
-
-        if live_current_price is not None and prediction is not None:
-            prediction["current_price"] = live_current_price
-            prediction["predicted_price"] = live_current_price * (1 + prediction.get("predicted_return", 0.0))
-            prediction["price_change"] = prediction["predicted_price"] - live_current_price
-            prediction["change_percent"] = prediction.get("predicted_return", 0.0) * 100
-
-        if prediction is None:
-            st.error("Could not make prediction")
-            return
-
-        # Get full analysis
-        analysis = predictor.get_full_analysis(features_df, live_data, threshold_value)
-        if analysis is None:
-            st.error("Could not generate a full prediction analysis at this time. Please try again later.")
-            return
-        prediction = select_display_prediction(analysis, prediction)
+            # Get full analysis
+            analysis = predictor.get_full_analysis(features_df, live_data, threshold_value)
+            if analysis is None:
+                st.error("Could not generate a full prediction analysis at this time. Please try again later.")
+                return
+            prediction = select_display_prediction(analysis, prediction)
+        else:
+            # cloud_demo has created 'analysis' and 'prediction' already
+            pass
 
         st.markdown("---")
 

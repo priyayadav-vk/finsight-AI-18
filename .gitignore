@@ -23,3 +23,6 @@ output.txt
 
 # Logs
 *.log
+# Large prebuilt models for offline storage
+/backend/large_models/*
+models*_*\.pkl

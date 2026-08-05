@@ -18,16 +18,9 @@ for company_name, company_info in sorted(INDIAN_COMPANIES.items()):
             historical = fetcher.fetch_historical_data(ticker, days=365)
             features = FeatureEngineer(historical).prepare_features()
             predictor = ModelPredictor(company_name, ticker)
-            loaded = predictor.load_model()
-            print('load result', loaded)
-            if not loaded:
-                print(f"Skipping predictions for {ticker} as model could not be loaded")
-                continue
+            print('load result', predictor.load_model())
             result = predictor.predict_next_price(features)
-            if not result:
-                print('No prediction available')
-                continue
-            print('prediction', True, result.get('predicted_price'))
+            print('prediction', result is not None, result.get('predicted_price') if result else None)
             analysis = predictor.get_full_analysis(features, {'current_price': result['current_price']}, 0.02)
             print('analysis has signal', bool(analysis and analysis.get('signal')))
         except Exception as exc:

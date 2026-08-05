@@ -24,6 +24,10 @@ STREAMLIT_CONFIG = {
     "initial_sidebar_state": "expanded",
 }
 
+# When deploying on Streamlit Cloud set this environment variable to "1" (or set STREAMLIT_CLOUD_MODE=True)
+import os
+STREAMLIT_CLOUD_MODE = os.environ.get("STREAMLIT_CLOUD", "0") == "1"
+
 # ==================== UI THEME & COLORS ====================
 THEME = {
     "primary": "#1d4ed8",
