@@ -299,7 +299,7 @@ def show():
                 ]
             })
             
-            st.dataframe(data_summary, width="stretch")
+            st.dataframe(data_summary)
             
             st.markdown("---")
             

@@ -420,7 +420,7 @@ def show():
         }
 
         metrics_df = pd.DataFrame(metrics_data)
-        st.dataframe(metrics_df, width="stretch")
+        st.dataframe(metrics_df)
 
         st.markdown("---")
 

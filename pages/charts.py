@@ -1,1 +1,11 @@
-from frontend.pages.charts import *
+﻿"""Legacy Streamlit page wrapper. Delegates rendering to the frontend.pages package."""
+
+from frontend.pages import charts as page
+
+
+def show():
+    page.show()
+
+
+if __name__ == '__main__':
+    show()

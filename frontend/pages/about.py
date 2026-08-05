@@ -71,7 +71,7 @@ def show():
         'Status': ['✅ Complete'] * 7
     }
     
-    obj_df = st.dataframe(objectives, width="stretch")
+    obj_df = st.dataframe(objectives)
     
     st.markdown("---")
     
@@ -173,7 +173,7 @@ def show():
     }
     
     future_df = pd.DataFrame(future_features)
-    st.dataframe(future_df, width="stretch")
+    st.dataframe(future_df)
     
     st.markdown("---")
     

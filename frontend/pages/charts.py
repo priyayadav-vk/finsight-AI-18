@@ -353,7 +353,7 @@ def show():
                 fig = create_volatility_chart(features_df)
             
             # Display chart
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig)
             
             st.markdown("---")
             
@@ -407,7 +407,7 @@ def show():
             
             # Data table
             if st.checkbox("Show raw data"):
-                st.dataframe(features_df.tail(20), width="stretch")
+                st.dataframe(features_df.tail(20))
         
         except Exception as e:
             st.error(f"Error loading charts: {str(e)}")

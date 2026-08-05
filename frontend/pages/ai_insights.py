@@ -56,7 +56,7 @@ def show():
     }
     
     config_df = pd.DataFrame(config_data)
-    st.dataframe(config_df, width="stretch")
+    st.dataframe(config_df)
     
     st.markdown("---")
     
@@ -79,7 +79,7 @@ def show():
     }
     
     features_df = pd.DataFrame(features_explanation)
-    st.dataframe(features_df, width="stretch")
+    st.dataframe(features_df)
     
     st.markdown("---")
     
@@ -128,10 +128,10 @@ def show():
                                 color_continuous_scale='Viridis'
                             )
                             fig.update_layout(template='plotly_dark', height=400)
-                            st.plotly_chart(fig, width="stretch")
+                            st.plotly_chart(fig)
                             
                             # Show importance values
-                            st.dataframe(importance_df, width="stretch")
+                            st.dataframe(importance_df)
                 except Exception as e:
                     st.error(f"Error loading feature importance: {str(e)}")
     else:
