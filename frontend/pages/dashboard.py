@@ -167,9 +167,39 @@ def show():
     st.session_state.current_ticker = ticker
     
     st.markdown("---")
+
+    # Diagnostic banner and Yahoo test button
+    probe = st.session_state.get('yahoo_probe') if 'yahoo_probe' in st.session_state else None
+    if probe:
+        # Color-coded display based on availability
+        if probe.get('available'):
+            st.success(f"Yahoo probe: ✅ {probe.get('message')} (Last checked: {probe.get('last_checked')})")
+        else:
+            st.warning(f"Yahoo probe: ⚠️ {probe.get('message')} (Last checked: {probe.get('last_checked')})")
+
+    # Place test button before fetching live data so users can verify connectivity on demand
+    test_col1, test_col2 = st.columns([3, 1])
+    with test_col1:
+        st.markdown("## 📈 Live Market Data")
+    with test_col2:
+        if st.button("Test Yahoo now", key="test_yahoo"):
+            with st.spinner("Testing Yahoo connectivity..."):
+                try:
+                    # Use the resolved ticker for probing
+                    probe_result = fetcher.check_yahoo_status(test_ticker=ticker)
+                except Exception as ex:
+                    probe_result = {'available': False, 'message': str(ex), 'last_checked': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                st.session_state['yahoo_probe'] = probe_result
+                if probe_result.get('available'):
+                    st.success(f"Yahoo is available: {probe_result.get('message')}")
+                else:
+                    st.error(f"Yahoo unavailable: {probe_result.get('message')}")
+
+    # Small spacer
+    st.markdown('')
     
     # Fetch live data
-    st.markdown("## 📈 Live Market Data")
+
      
     with st.spinner("Fetching live data..."):
         try:
