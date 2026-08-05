@@ -317,27 +317,27 @@ def main():
     
     # Route to pages
     if "Home" in page:
-        from pages import home
+        from frontend.pages import home
         home.show()
     
     elif "Dashboard" in page:
-        from pages import dashboard
+        from frontend.pages import dashboard
         dashboard.show()
     
     elif "Prediction" in page:
-        from pages import prediction
+        from frontend.pages import prediction
         prediction.show()
     
     elif "Charts" in page:
-        from pages import charts
+        from frontend.pages import charts
         charts.show()
     
     elif "AI Insights" in page:
-        from pages import ai_insights
+        from frontend.pages import ai_insights
         ai_insights.show()
     
     elif "About" in page:
-        from pages import about
+        from frontend.pages import about
         about.show()
 
 
