@@ -1,0 +1,17 @@
+{
+  "Reliance Industries Limited": {"NSE": "RELIANCE.NS", "BSE": "500325.BO"},
+  "Tata Consultancy Services": {"NSE": "TCS.NS", "BSE": "532540.BO"},
+  "Infosys Limited": {"NSE": "INFY.NS", "BSE": "500209.BO"},
+  "Housing Development Finance": {"NSE": "HDFC.NS", "BSE": "500010.BO"},
+  "ICICI Bank Limited": {"NSE": "ICICIBANK.NS", "BSE": "532174.BO"},
+  "State Bank of India": {"NSE": "SBIN.NS", "BSE": "500112.BO"},
+  "Hindustan Unilever": {"NSE": "HINDUNILVR.NS", "BSE": "500696.BO"},
+  "Larsen & Toubro": {"NSE": "LT.NS", "BSE": "500510.BO"},
+  "Maruti Suzuki India": {"NSE": "MARUTI.NS", "BSE": "532500.BO"},
+  "Asian Paints India": {"NSE": "ASIANPAINT.NS", "BSE": "500820.BO"},
+  "HDFC Bank Limited": {"NSE": "HDFCBANK.NS", "BSE": "500180.BO"},
+  "Bharti Airtel Limited": {"NSE": "BHARTIARTL.NS", "BSE": "532454.BO"},
+  "ITC Limited": {"NSE": "ITC.NS", "BSE": "500010.BO"},
+  "Sun Pharmaceutical": {"NSE": "SUNPHARMA.NS", "BSE": "524715.BO"},
+  "Tata Motors Limited": {"NSE": "TATAMOTORS.NS", "BSE": "500570.BO"}
+}
