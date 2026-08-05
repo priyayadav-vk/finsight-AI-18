@@ -194,7 +194,7 @@ class DataFetcher:
                 # Get historical data (last 5 days to get today's data)
                 data = stock.history(period='5d')
             
-            if data.empty:
+            if data is None or data.empty:
                 raise Exception(f"No data returned for {ticker}")
             
             # Get the latest row (today's or latest available data)
@@ -216,25 +216,52 @@ class DataFetcher:
             else:
                 market_status = "[CLOSED] (Weekend)"
             
+            previous_close = latest['Close']
+            if hasattr(data, 'shape') and len(data) > 1:
+                try:
+                    previous_close = data.iloc[-2]['Close']
+                except Exception:
+                    previous_close = latest['Close']
+
             live_data = {
                 'ticker': ticker,
                 'company_name': info.get('longName', ticker),
-                'current_price': latest['Close'],
-                'open_price': latest['Open'],
-                'high_price': latest['High'],
-                'low_price': latest['Low'],
-                'previous_close': data.iloc[-2]['Close'] if len(data) > 1 else latest['Close'],
-                'volume': latest['Volume'],
+                'current_price': float(latest['Close']) if latest.get('Close') is not None else float(latest["Close"]),
+                'open_price': float(latest['Open']) if latest.get('Open') is not None else float(latest["Open"]),
+                'high_price': float(latest['High']) if latest.get('High') is not None else float(latest["High"]),
+                'low_price': float(latest['Low']) if latest.get('Low') is not None else float(latest["Low"]),
+                'previous_close': float(previous_close),
+                'volume': int(latest['Volume']),
                 'market_status': market_status,
                 'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 'date': latest.name.strftime("%Y-%m-%d")
             }
             
             return live_data
-        
         except Exception as e:
-            # Fallback to demo data
-            return self._get_demo_data(ticker)
+            logger.exception("Live data fetch failed for %s: %s", ticker, e)
+            try:
+                demo_data = self._get_demo_data(ticker, is_fallback=True)
+                demo_data['data_source'] = 'Demo fallback after live fetch failure'
+                return demo_data
+            except Exception as fallback_e:
+                logger.exception("Demo fallback generation failed for %s: %s", ticker, fallback_e)
+                return {
+                    'ticker': str(ticker),
+                    'company_name': str(ticker),
+                    'current_price': 0.0,
+                    'open_price': 0.0,
+                    'high_price': 0.0,
+                    'low_price': 0.0,
+                    'previous_close': 0.0,
+                    'volume': 0,
+                    'market_status': '[CLOSED] (Demo)',
+                    'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'date': datetime.now().strftime("%Y-%m-%d"),
+                    'is_demo': True,
+                    'is_fallback': True,
+                    'data_source': 'Hard fallback data'
+                }
     
     def fetch_historical_data(self, ticker, days=HISTORICAL_DAYS):
         """
@@ -335,6 +362,8 @@ class DataFetcher:
         --------
         dict : Mock live market data
         """
+        ticker = str(ticker or '').strip()
+
         # Look up company name from config
         company_name = None
         for name, tickers in INDIAN_COMPANIES.items():
@@ -343,7 +372,7 @@ class DataFetcher:
                 break
         
         if not company_name:
-            company_name = ticker
+            company_name = ticker or 'Unknown Ticker'
         
         # Generate realistic stock prices (base price varies by company)
         base_prices = {
@@ -356,7 +385,8 @@ class DataFetcher:
         base_price = base_prices.get(ticker.split('.')[0], 2000)
         
         # Add realistic random variation
-        np.random.seed(hash(ticker) % 2**32)
+        seed_value = hash(ticker) % (2**32)
+        np.random.seed(seed_value)
         variation = np.random.normal(0, 50)
         current_price = base_price + variation
         
@@ -364,7 +394,7 @@ class DataFetcher:
         high_price = max(current_price, open_price) + np.random.uniform(0, 150)
         low_price = min(current_price, open_price) - np.random.uniform(0, 150)
         previous_close = current_price + np.random.uniform(-200, 200)
-        volume = np.random.randint(100000, 10000000)
+        volume = int(np.random.randint(100000, 10000000))
         
         now = datetime.now()
         market_open_time = now.replace(hour=9, minute=15, second=0)
@@ -378,15 +408,15 @@ class DataFetcher:
         return {
             'ticker': ticker,
             'company_name': company_name,
-            'current_price': round(current_price, 2),
-            'open_price': round(open_price, 2),
-            'high_price': round(high_price, 2),
-            'low_price': round(low_price, 2),
-            'previous_close': round(previous_close, 2),
-            'volume': int(volume),
+            'current_price': round(float(current_price), 2),
+            'open_price': round(float(open_price), 2),
+            'high_price': round(float(high_price), 2),
+            'low_price': round(float(low_price), 2),
+            'previous_close': round(float(previous_close), 2),
+            'volume': volume,
             'market_status': market_status,
-            'last_updated': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'date': datetime.now().strftime("%Y-%m-%d"),
+            'last_updated': now.strftime("%Y-%m-%d %H:%M:%S"),
+            'date': now.strftime("%Y-%m-%d"),
             'is_demo': True,
             'is_fallback': bool(is_fallback)
         }

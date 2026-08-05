@@ -293,7 +293,7 @@ def main():
             st.success("Yahoo Finance validation is available.")
             st.caption(status['message'])
         elif status['available'] is False:
-            st.error("Yahoo Finance validation is unavailable.")
+            st.warning("Yahoo Finance validation is unavailable. The app will use demo fallback data instead.")
             st.caption(status['message'])
         else:
             st.info("Yahoo Finance validation has not been checked yet.")
