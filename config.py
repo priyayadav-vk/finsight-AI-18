@@ -4,6 +4,7 @@ Contains all settings, constants, and project configuration
 """
 
 import re
+import os
 from pathlib import Path
 
 # ==================== PROJECT INFO ====================
@@ -695,7 +696,9 @@ FEATURED_COMPANIES = [c for c in FEATURED_COMPANIES if c in INDIAN_COMPANIES and
 # ==================== DATA PATHS ====================
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_PATH = str(PROJECT_ROOT / "data")
-MODEL_PATH = str(PROJECT_ROOT / "models")
+MODEL_PATH = str(PROJECT_ROOT / "backend" / "large_models")
+MODEL_BASE_URL = os.environ.get("MODEL_BASE_URL", "").strip().rstrip("/")
+STREAMLIT_CLOUD_MODE = os.environ.get("STREAMLIT_CLOUD", "0") == "1"
 CACHE_PATH = str(PROJECT_ROOT / ".streamlit_cache")
 AVAILABILITY_CACHE_FILE = str(PROJECT_ROOT / "data" / "company_availability.json")
 AVAILABILITY_CACHE_TTL = 24 * 60 * 60  # 24 hours

@@ -67,6 +67,7 @@ Notes & hardening
 Troubleshooting
 - If Streamlit fails due to starlette/streamlit import mismatch: ensure requirements.txt pins compatible Streamlit version (the provided file uses streamlit==1.28.1). If your environment needs a different Streamlit version, update requirements.txt and rebuild the image.
 - If the app is slow to start due to model training on first-run, consider pre-training models offline and adding them to ./data/models, or increase VM CPU/memory.
+- For Streamlit Cloud deployments, set `STREAMLIT_CLOUD=1` to enable a safe demo fallback when no local models are present, and set `MODEL_BASE_URL` to a public URL where model artifacts can be downloaded.
 
 Advanced
 - Add a small service (e.g., gunicorn + uvicorn) as a lightweight HTTP health endpoint if you prefer not to rely on Streamlit's root path.

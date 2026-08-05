@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LARGE_DIR = ROOT / "backend" / "large_models"
+ROOT_MODELS_DIR = ROOT / "models"
 PATTERNS = ["models*_model.pkl", "models*_scaler.pkl", "models*_metadata.pkl", "models*.pkl"]
 
 os.makedirs(LARGE_DIR, exist_ok=True)
@@ -24,12 +25,38 @@ for pattern in PATTERNS:
         shutil.move(str(p), str(dest))
         moved.append(dest)
 
+if ROOT_MODELS_DIR.exists():
+    for item in ROOT_MODELS_DIR.iterdir():
+        dest = LARGE_DIR / item.name
+        if item.is_dir():
+            if dest.exists():
+                for subitem in item.iterdir():
+                    subdest = dest / subitem.name
+                    print(f"Moving {subitem} -> {subdest}")
+                    shutil.move(str(subitem), str(subdest))
+                    moved.append(subdest)
+                item.rmdir()
+            else:
+                print(f"Moving directory {item} -> {dest}")
+                shutil.move(str(item), str(dest))
+        else:
+            if dest.exists():
+                print(f"Skipping existing {dest}")
+                continue
+            print(f"Moving {item} -> {dest}")
+            shutil.move(str(item), str(dest))
+            moved.append(dest)
+    try:
+        ROOT_MODELS_DIR.rmdir()
+    except OSError:
+        pass
+
 # Add gitignore entry
 gitignore = ROOT / ".gitignore"
-entry = "# Large prebuilt models for offline storage\n/backend/large_models/*\nmodels*_*\.pkl\n"
+entry = "# Large prebuilt models for offline storage\n/backend/large_models/*\n/models/\nmodels*_*\\.pkl\n"
 if gitignore.exists():
     text = gitignore.read_text()
-    if "/backend/large_models/" not in text:
+    if "/backend/large_models/" not in text or "/models/" not in text:
         gitignore.write_text(text + "\n" + entry)
 else:
     gitignore.write_text(entry)

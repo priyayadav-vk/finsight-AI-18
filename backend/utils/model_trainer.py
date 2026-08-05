@@ -10,6 +10,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 import joblib
 import os
+import urllib.request
+from urllib.error import HTTPError, URLError
 from datetime import datetime
 
 from backend.config import MODEL_CONFIG, FEATURE_COLUMNS, MODEL_PATH, FEATURE_INFO, AVAILABILITY_CACHE_TTL
@@ -117,6 +119,42 @@ class ModelTrainer:
         
         return X_train_scaled
     
+    def _model_file_names(self):
+        ticker_clean = self.ticker.replace('.', '_')
+        return (
+            f"{ticker_clean}_model.pkl",
+            f"{ticker_clean}_scaler.pkl",
+            f"{ticker_clean}_metadata.pkl",
+        )
+
+    def _download_model_files(self):
+        from backend.config import MODEL_BASE_URL
+
+        if not MODEL_BASE_URL:
+            return False
+
+        downloaded_files = []
+        try:
+            for file_name in self._model_file_names():
+                dest_path = os.path.join(self.model_path, file_name)
+                if os.path.exists(dest_path):
+                    continue
+                url = f"{MODEL_BASE_URL}/{file_name}"
+                print(f"Downloading model artifact from {url}")
+                urllib.request.urlretrieve(url, dest_path)
+                downloaded_files.append(dest_path)
+                print(f"Saved model artifact to {dest_path}")
+
+            return all(os.path.exists(os.path.join(self.model_path, name)) for name in self._model_file_names())
+        except (HTTPError, URLError, ValueError, OSError) as exc:
+            print(f"Failed to download model artifacts: {exc}")
+            for path in downloaded_files:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            return False
+
     def train_model(self, X, y, test_size=None):
         """
         Train Random Forest model.
@@ -338,6 +376,8 @@ class ModelTrainer:
         metadata_file = os.path.join(self.model_path, f"{ticker_clean}_metadata.pkl")
         
         if not os.path.exists(model_file):
+            if self._download_model_files():
+                return self.load_model()
             print(f"Model file not found: {model_file}")
             return False
         

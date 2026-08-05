@@ -15,14 +15,14 @@ __pycache__/
 # Streamlit cache
 .streamlit/
 
-# Model files (optional if too large)
-*.pkl
-
 # Large output files
 output.txt
 
 # Logs
 *.log
+
 # Large prebuilt models for offline storage
-/backend/large_models/*
+/backend/large_models/
+/backend/models/
+/models/
 models*_*\.pkl
