@@ -39,49 +39,27 @@ def show():
         st.warning("No companies are currently configured.")
         return
 
-    # Featured quick-pick (show only featured companies validated as available)
+    # Featured quick-pick removed — show full company selector instead
     featured_choice = None
-    if FEATURED_COMPANIES:
-        # Show featured companies that exist in the current companies list
-        featured_available = [c for c in FEATURED_COMPANIES if c in active_company_map]
-        featured_unavailable = [c for c in FEATURED_COMPANIES if c not in companies_list]
-        if featured_available:
-            featured_choice = st.selectbox(
-                label="Quick pick featured company",
-                options=[""] + featured_available,
-                index=0,
-                help="Pick a featured blue-chip company"
-            )
-            if featured_choice == "":
-                featured_choice = None
-        else:
-            # If no featured companies are present, show a neutral message
-            st.info("No featured companies are currently present in the registry.")
-            if featured_unavailable:
-                st.caption(f"Featured but missing from registry: {', '.join(featured_unavailable[:6])}{(' and more' if len(featured_unavailable)>6 else '')}")
     
     col1, col2 = st.columns([3, 1])
     
     with col1:
-        # Company search & selection (only shown when no featured quick-pick chosen)
-        if featured_choice:
-            selected_company = featured_choice
-            st.markdown(f"Selected featured company: **{selected_company}**")
-        else:
-            # Restore previously selected company from session if still valid
-            prev_selected = st.session_state.get('selected_company') if 'selected_company' in st.session_state else None
-            default_index = 0
-            if prev_selected and prev_selected in companies_list:
-                try:
-                    default_index = companies_list.index(prev_selected)
-                except Exception:
-                    default_index = 0
-            selected_company = st.selectbox(
-                label="Select or search company",
-                options=companies_list,
-                index=default_index,
-                help="Search by company name or scroll through the list"
-            )
+        # Company search & selection
+        # Restore previously selected company from session if still valid
+        prev_selected = st.session_state.get('selected_company') if 'selected_company' in st.session_state else None
+        default_index = 0
+        if prev_selected and prev_selected in companies_list:
+            try:
+                default_index = companies_list.index(prev_selected)
+            except Exception:
+                default_index = 0
+        selected_company = st.selectbox(
+            label="Select or search company",
+            options=companies_list,
+            index=default_index,
+            help="Search by company name or scroll through the list"
+        )
     
     with col2:
         # Refresh button
