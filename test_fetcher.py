@@ -115,6 +115,8 @@ class TestDataFetcher(unittest.TestCase):
             status = fetcher.check_yahoo_status('RELIANCE.NS')
             self.assertFalse(status['available'])
             self.assertIn('fallback', status['message'].lower())
+            self.assertNotIn('details:', status['message'].lower())
+            self.assertNotIn('tested tickers', status['message'].lower())
 
     def test_check_yahoo_status_uses_ist_timestamp(self):
         fetcher = DataFetcher()

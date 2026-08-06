@@ -293,8 +293,7 @@ def main():
             st.success("Yahoo Finance validation is available.")
             st.caption(status['message'])
         elif status['available'] is False:
-            st.info("Yahoo is temporarily unavailable. The app is continuing with local/demo fallback data.")
-            st.caption(status['message'])
+            st.info("Yahoo is temporarily unavailable. The app is using local/demo fallback data.")
         else:
             st.info("Yahoo Finance validation has not been checked yet.")
 
