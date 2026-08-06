@@ -195,9 +195,8 @@ def show():
                     st.success(f"Yahoo is available: {probe_result.get('message')}")
                 else:
                     st.info(
-                        "Yahoo is temporarily unavailable, so the app is using local/demo data for this session. "
-                        f"{probe_result.get('message')}"
-                    )
+                    "Yahoo is temporarily unavailable. The app is using local/demo data for this session."
+                )
 
         # Pre-warm cache button
         if st.button('Pre-warm cache (popular tickers)', key='prewarm'):
@@ -229,20 +228,9 @@ def show():
             is_demo = bool(live_data.get('is_demo'))
 
             if is_demo or 'Demo' in str(data_source) or 'fallback' in str(data_source).lower():
-                st.warning(f"""
-                ⚠️ **Data Source Alert**: {data_source}
-
-                Live provider(s) were not available for `{ticker}`.
-                The displayed numbers are synthetic/demo values used for demonstrations.
-                To use live data during your presentation, set a free API key (Alpha Vantage or TwelveData) in Streamlit Cloud Secrets and redeploy.
-                """)
-
-                with st.expander('How to add a free Alpha Vantage key (recommended)'):
-                    st.markdown('''
-                    1. Create a free account at https://www.alphavantage.co/ and obtain an API key.
-                    2. In Streamlit Cloud: App → Settings → Secrets, add a new secret named `ALPHAVANTAGE_API_KEY` with the key value.
-                    3. Redisplay the app; it will automatically use Alpha Vantage as a fallback provider.
-                    ''')
+                st.info(
+                    "Using local/demo values for this view because Yahoo is currently unavailable."
+                )
             else:
                 st.success(f"""
                 ✓ **Live Data**: {data_source}
@@ -262,7 +250,7 @@ def show():
             
             with col2:
                 st.markdown("**Market Status**")
-                st.markdown(f"# {live_data['market_status']}")
+                st.markdown(f"{live_data['market_status']}")
             
             with col3:
                 st.markdown("**Last Updated**")
