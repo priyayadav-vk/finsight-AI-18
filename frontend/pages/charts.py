@@ -308,7 +308,7 @@ def show():
     
     with st.spinner("Loading chart data..."):
         try:
-            # Fetch data
+            # Fetch data using cached historical data when available
             fetcher = DataFetcher()
             hist_data = fetcher.fetch_historical_data(ticker, days=365)
              

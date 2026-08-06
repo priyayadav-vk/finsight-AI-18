@@ -76,7 +76,7 @@ def show():
     try:
         fetcher = DataFetcher()
 
-        # Fetch historical data
+        # Fetch historical data with local cache fallback to avoid repeated Yahoo requests
         hist_data = fetcher.fetch_historical_data(ticker, days=365)
 
         if hist_data is None:

@@ -213,12 +213,9 @@ def show():
     st.markdown('')
     
     # Fetch live data
-
-     
     with st.spinner("Fetching live data..."):
         try:
             live_data = fetcher.fetch_live_data(ticker)
-             
             if live_data is None:
                 st.error(f"Could not fetch data for {ticker}")
                 st.info("The stock market may be closed or the ticker is unavailable.")

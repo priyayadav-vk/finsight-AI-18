@@ -17,6 +17,9 @@ import requests
 warnings.filterwarnings('ignore')
 
 import logging
+import re
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 
 from backend.config import AVAILABILITY_CACHE_TTL, ALL_INDIAN_COMPANIES, INDIAN_COMPANIES, HISTORICAL_DAYS, DATA_PATH, is_blocked_company_name
 import os
@@ -235,10 +238,23 @@ class DataFetcher:
     def fetch_live_data(self, ticker):
         """
         Fetch the latest live data for a stock with multi-provider fallback.
-        Tries (in order): Yahoo (yfinance), Alpha Vantage (if ALPHAVANTAGE_API_KEY set),
+        Tries (in order): local cache, Yahoo (yfinance), Alpha Vantage (if ALPHAVANTAGE_API_KEY set),
         TwelveData (if TWELVEDATA_API_KEY set). Falls back to demo data.
         """
-        yahoo_ticker = self._resolve_ticker_for_yahoo(ticker)
+        normalized_ticker = str(ticker or '').strip()
+        if not normalized_ticker:
+            logger.warning('Empty ticker requested for live data; returning demo data')
+            return self._get_demo_data('UNKNOWN', is_fallback=True)
+        if not re.fullmatch(r'[A-Za-z0-9.\-]+', normalized_ticker):
+            logger.warning('Invalid ticker format %r; returning demo data', normalized_ticker)
+            return self._get_demo_data(normalized_ticker, is_fallback=True)
+        yahoo_ticker = self._resolve_ticker_for_yahoo(normalized_ticker)
+        logger.info('Fetching live data for %s (resolved Yahoo ticker: %s)', normalized_ticker, yahoo_ticker)
+
+        cached_live = self.load_cached_data(normalized_ticker.replace('.', '_'), cache_type='live')
+        if cached_live is not None and not cached_live.empty:
+            logger.info('Using cached live data for %s', normalized_ticker)
+            return cached_live.to_dict(orient='records')[0] if isinstance(cached_live, pd.DataFrame) and not cached_live.empty else cached_live
 
         # helper to present IST times
         def _ist_now():
@@ -420,10 +436,11 @@ class DataFetcher:
                     'data_index_timestamp_utc': data_ts.isoformat() if data_ts is not None else None,
                     'data_source': 'Yahoo'
                 }
+                self.cache_data(normalized_ticker.replace('.', '_'), pd.DataFrame([live_data]), cache_type='live')
                 return live_data
 
         except Exception as e:
-            logger.debug('Yahoo fetch failed for %s: %s', ticker, e)
+            logger.warning('Yahoo live fetch failed for %s (resolved=%s): %s', normalized_ticker, yahoo_ticker, e)
             # If Yahoo via yfinance failed, attempt a direct HTTP session-based fetch that
             # obtains cookies and uses query/chart endpoints with Referer headers.
 
@@ -567,7 +584,7 @@ class DataFetcher:
             return td_result
 
         # 4) As a last resort, return demo fallback
-        logger.info('All live providers failed for %s; returning demo fallback', ticker)
+        logger.warning('All live providers failed for %s; returning demo fallback', normalized_ticker)
         try:
             demo_data = self._get_demo_data(ticker, is_fallback=True)
             demo_data['data_source'] = 'Demo fallback after all providers failed'
@@ -608,19 +625,17 @@ class DataFetcher:
         pd.DataFrame : Historical OHLCV data
         """
         try:
-            # Load cached historical data first to avoid repeated Yahoo requests
-            cache_key = ticker.replace('.', '_')
+            cache_key = str(ticker or '').replace('.', '_')
+            logger.info('Fetching historical data for %s (days=%s, cache_key=%s)', ticker, days, cache_key)
             cached = self.load_cached_data(cache_key, cache_type='historical')
             if cached is not None and not cached.empty:
+                logger.info('Using cached historical data for %s', ticker)
                 return cached
 
-            # Calculate start date
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
-            
             yahoo_ticker = self._resolve_ticker_for_yahoo(ticker)
 
-            # Download data from Yahoo Finance
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 data = yf.download(
                     yahoo_ticker,
@@ -631,50 +646,42 @@ class DataFetcher:
                     auto_adjust=False,
                     actions=False
                 )
-            
-            if data.empty:
+
+            if data is None or data.empty:
+                logger.warning('Yahoo returned empty historical data for %s', ticker)
                 demo_data = self._generate_demo_historical_data(ticker)
                 self.cache_data(cache_key, demo_data, cache_type='historical')
                 return demo_data
-            
-            # Keep only the required OHLCV columns, regardless of Yahoo's extra columns
+
             required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
             missing_columns = [col for col in required_columns if col not in data.columns]
             if missing_columns:
                 raise ValueError(f"Missing required columns for {ticker}: {missing_columns}")
-            
-            data = data[required_columns].copy()
-            
-            # Reset index to make date a column
-            data.reset_index(inplace=True)
-            
-            # Rename 'Date' column
-            data.rename(columns={'Date': 'Date'}, inplace=True)
-            
-            # Remove rows with missing data
-            data = data.dropna()
-            
-            # Ensure date column is datetime
-            data['Date'] = pd.to_datetime(data['Date'])
-            
-            # Convert OHLCV columns to proper numeric types
-            data['Open'] = pd.to_numeric(data['Open'], errors='coerce').astype(float)
-            data['High'] = pd.to_numeric(data['High'], errors='coerce').astype(float)
-            data['Low'] = pd.to_numeric(data['Low'], errors='coerce').astype(float)
-            data['Close'] = pd.to_numeric(data['Close'], errors='coerce').astype(float)
-            data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce').astype(int)
-            
-            # Remove any rows with NaN after conversion
-            data = data.dropna()
 
+            data = data[required_columns].copy()
+            data.reset_index(inplace=True)
+            if 'Date' in data.columns:
+                data.rename(columns={'Date': 'Date'}, inplace=True)
+            else:
+                data.rename(columns={data.columns[0]: 'Date'}, inplace=True)
+            data = data.dropna()
+            data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
+            data = data.dropna(subset=['Date'])
+            for col in ['Open', 'High', 'Low', 'Close']:
+                data[col] = pd.to_numeric(data[col], errors='coerce')
+            data['Volume'] = pd.to_numeric(data['Volume'], errors='coerce').astype('Int64')
+            data = data.dropna(subset=['Open', 'High', 'Low', 'Close'])
+            if data.empty:
+                logger.warning('Historical frame became empty after cleaning for %s', ticker)
+                raise ValueError(f'No usable rows after cleaning for {ticker}')
+            data = data.sort_values('Date').reset_index(drop=True)
             self.cache_data(cache_key, data, cache_type='historical')
-            
             return data
-        
+
         except Exception as e:
-            # Try demo mode as fallback
+            logger.exception('Historical data fetch failed for %s: %s', ticker, e)
             demo_data = self._generate_demo_historical_data(ticker)
-            self.cache_data(cache_key, demo_data, cache_type='historical')
+            self.cache_data(cache_key if 'cache_key' in locals() else str(ticker or '').replace('.', '_'), demo_data, cache_type='historical')
             return demo_data
     
     def _get_demo_data(self, ticker, is_fallback=False):
@@ -1027,44 +1034,28 @@ class DataFetcher:
     def cache_data(self, ticker, data, cache_type='historical'):
         """
         Cache data locally to avoid repeated API calls.
-        
-        Parameters:
-        -----------
-        ticker : str
-            Stock ticker
-        data : pd.DataFrame
-            Data to cache
-        cache_type : str
-            Type of cache ('historical' or 'live')
         """
         try:
-            cache_file = os.path.join(self.data_path, f"{ticker.replace('.', '_')}_{cache_type}.csv")
-            data.to_csv(cache_file, index=False)
-        except Exception:
-            pass
+            cache_file = os.path.join(self.data_path, f"{str(ticker).replace('.', '_')}_{cache_type}.csv")
+            if isinstance(data, pd.DataFrame):
+                data.to_csv(cache_file, index=False)
+            elif isinstance(data, dict):
+                pd.DataFrame([data]).to_csv(cache_file, index=False)
+        except Exception as exc:
+            logger.debug('Could not cache %s data for %s: %s', cache_type, ticker, exc)
     
     def load_cached_data(self, ticker, cache_type='historical'):
         """
         Load cached data from local storage.
-        
-        Parameters:
-        -----------
-        ticker : str
-            Stock ticker
-        cache_type : str
-            Type of cache ('historical' or 'live')
-        
-        Returns:
-        --------
-        pd.DataFrame or None
         """
         try:
-            cache_file = os.path.join(self.data_path, f"{ticker.replace('.', '_')}_{cache_type}.csv")
+            cache_file = os.path.join(self.data_path, f"{str(ticker).replace('.', '_')}_{cache_type}.csv")
             if os.path.exists(cache_file):
-                return pd.read_csv(cache_file)
+                df = pd.read_csv(cache_file)
+                if not df.empty:
+                    return df
         except Exception as e:
-            print(f"Error loading cached data: {str(e)}")
-        
+            logger.debug('Could not load cached %s data for %s: %s', cache_type, ticker, e)
         return None
 
     def has_local_data(self, ticker=None):

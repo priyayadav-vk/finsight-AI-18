@@ -527,7 +527,7 @@ EXTENDED_COMPANIES = {
     "Schaeffler India": {"NSE": "SCHAEFFLER.NS", "BSE": "505790.BO", "sector": "Engineering"},
     "Sharda Cropchem": {"NSE": "SHARDACROP.NS", "BSE": "500387.BO", "sector": "Agrochemicals"},
     "Shoppers Stop": {"NSE": "SHOPERSTOP.NS", "BSE": "532638.BO", "sector": "Retail"},
-    "Solar Industries": {"NSE": "SOLARINDS.NS", "BSE": "523  ?", "sector": "Defense"},
+    "Solar Industries": {"NSE": "SOLARINDS.NS", "BSE": "532725.BO", "sector": "Defense"},
     "SpiceJet": {"NSE": "SPICEJET.NS", "BSE": "500285.BO", "sector": "Aviation"},
     "Star Health": {"NSE": "STARHEALTH.NS", "BSE": "543412.BO", "sector": "Insurance"},
     "Sundaram Finance": {"NSE": "SUNDARMFIN.NS", "BSE": "590071.BO", "sector": "Finance"},
