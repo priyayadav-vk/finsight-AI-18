@@ -116,6 +116,20 @@ class TestDataFetcher(unittest.TestCase):
             self.assertFalse(status['available'])
             self.assertIn('fallback', status['message'].lower())
 
+    def test_check_yahoo_status_uses_ist_timestamp(self):
+        fetcher = DataFetcher()
+        with patch.object(fetcher, '_probe_yahoo_status', return_value=(False, 'HTTP Error 401: Unauthorized')):
+            status = fetcher.check_yahoo_status('RELIANCE.NS')
+            self.assertIn('IST', status['last_checked'])
+
+    def test_live_fetch_uses_demo_when_recent_failure_exists(self):
+        fetcher = DataFetcher()
+        fetcher._set_recent_failure('RELIANCE_NS', 'live', 'recent failure')
+        with patch('backend.utils.data_fetcher.yf.Ticker', side_effect=AssertionError('Yahoo should not be called')):
+            result = fetcher.fetch_live_data('RELIANCE.NS')
+        self.assertTrue(result.get('is_demo'))
+        self.assertTrue(result.get('is_fallback'))
+
 
 if __name__ == '__main__':
     unittest.main()

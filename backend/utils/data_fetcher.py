@@ -100,6 +100,18 @@ class DataFetcher:
         failure_cache.pop(f'{cache_type}:{cache_key}', None)
         self._save_failure_cache(failure_cache)
 
+    def _get_ist_now(self):
+        """Return the current time in Indian Standard Time."""
+        return datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+
+    def _format_ist_timestamp(self, dt=None):
+        """Format a datetime value in IST with an explicit timezone suffix."""
+        if dt is None:
+            dt = datetime.now(timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone(timedelta(hours=5, minutes=30))).strftime('%Y-%m-%d %H:%M:%S IST')
+
     def _get_availability_cache_path(self):
         """Return the path to the Yahoo availability cache file."""
         return os.path.join(self.data_path, 'company_availability.json')
@@ -227,7 +239,7 @@ class DataFetcher:
         return {
             'available': available,
             'message': message,
-            'last_checked': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'last_checked': self._format_ist_timestamp()
         }
 
     def yahoo_verbose_probe(self, tickers):
@@ -322,14 +334,23 @@ class DataFetcher:
         yahoo_ticker = self._resolve_ticker_for_yahoo(normalized_ticker)
         logger.info('Fetching live data for %s (resolved Yahoo ticker: %s)', normalized_ticker, yahoo_ticker)
 
-        cached_live = self.load_cached_data(normalized_ticker.replace('.', '_'), cache_type='live')
+        live_cache_key = normalized_ticker.replace('.', '_')
+        recent_failure = self._get_recent_failure(live_cache_key, 'live')
+        if recent_failure:
+            logger.info('Skipping live Yahoo fetch for %s due to recent failure: %s', normalized_ticker, recent_failure.get('reason'))
+            demo_data = self._get_demo_data(ticker, is_fallback=True)
+            demo_data['data_source'] = 'Demo fallback after recent provider failure'
+            demo_data['is_fallback'] = True
+            return demo_data
+
+        cached_live = self.load_cached_data(live_cache_key, cache_type='live')
         if cached_live is not None and not cached_live.empty:
             logger.info('Using cached live data for %s', normalized_ticker)
             return cached_live.to_dict(orient='records')[0] if isinstance(cached_live, pd.DataFrame) and not cached_live.empty else cached_live
 
         # helper to present IST times
         def _ist_now():
-            return datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=5, minutes=30)))
+            return self._get_ist_now()
 
         def _market_status_for(now):
             market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
@@ -665,6 +686,7 @@ class DataFetcher:
             return demo_data
         except Exception as fallback_e:
             logger.exception('Demo fallback generation failed for %s: %s', ticker, fallback_e)
+            fallback_now = self._get_ist_now()
             return {
                 'ticker': str(ticker),
                 'company_name': str(ticker),
@@ -675,8 +697,8 @@ class DataFetcher:
                 'previous_close': 0.0,
                 'volume': 0,
                 'market_status': '[CLOSED] (Demo)',
-                'last_updated': _ist_now().strftime('%Y-%m-%d %H:%M:%S %Z'),
-                'date': _ist_now().strftime('%Y-%m-%d'),
+                'last_updated': self._format_ist_timestamp(fallback_now),
+                'date': fallback_now.strftime('%Y-%m-%d'),
                 'is_demo': True,
                 'is_fallback': True,
                 'data_source': 'Hard fallback data'
@@ -834,7 +856,7 @@ class DataFetcher:
             'previous_close': round(float(previous_close), 2),
             'volume': volume,
             'market_status': market_status,
-            'last_updated': server_now.strftime("%Y-%m-%d %H:%M:%S %Z"),
+            'last_updated': self._format_ist_timestamp(server_now),
             'date': server_now.strftime("%Y-%m-%d"),
             'is_demo': True,
             'is_fallback': bool(is_fallback)
