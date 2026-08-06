@@ -42,6 +42,63 @@ class DataFetcher:
         """Initialize the DataFetcher"""
         self.data_path = DATA_PATH
         os.makedirs(self.data_path, exist_ok=True)
+        self.failure_cache_ttl = 600
+        self.failure_cache_path = os.path.join(self.data_path, 'provider_failures.json')
+
+    def _get_failure_cache_path(self):
+        """Return the path to the provider-failure cache file."""
+        return self.failure_cache_path
+
+    def _load_failure_cache(self):
+        """Load recent provider failures from local storage."""
+        try:
+            if os.path.exists(self._get_failure_cache_path()):
+                with open(self._get_failure_cache_path(), 'r', encoding='utf-8') as fh:
+                    data = json.load(fh)
+                    if isinstance(data, dict):
+                        return data
+        except Exception:
+            pass
+        return {}
+
+    def _save_failure_cache(self, failure_cache):
+        """Persist recent provider failures locally."""
+        try:
+            with open(self._get_failure_cache_path(), 'w', encoding='utf-8') as fh:
+                json.dump(failure_cache, fh)
+        except Exception:
+            pass
+
+    def _get_recent_failure(self, cache_key, cache_type):
+        """Return a recent provider failure entry if it is still within TTL."""
+        if not cache_key:
+            return None
+        failure_cache = self._load_failure_cache()
+        entry = failure_cache.get(f'{cache_type}:{cache_key}')
+        if isinstance(entry, dict):
+            ts = entry.get('timestamp', 0)
+            if isinstance(ts, (int, float)) and (time.time() - ts) <= self.failure_cache_ttl:
+                return entry
+        return None
+
+    def _set_recent_failure(self, cache_key, cache_type, reason):
+        """Record a recent provider failure so the app can skip repeat retries briefly."""
+        if not cache_key:
+            return
+        failure_cache = self._load_failure_cache()
+        failure_cache[f'{cache_type}:{cache_key}'] = {
+            'timestamp': time.time(),
+            'reason': str(reason or 'provider failure')
+        }
+        self._save_failure_cache(failure_cache)
+
+    def _clear_recent_failure(self, cache_key, cache_type):
+        """Remove a recent failure marker after a provider succeeds."""
+        if not cache_key:
+            return
+        failure_cache = self._load_failure_cache()
+        failure_cache.pop(f'{cache_type}:{cache_key}', None)
+        self._save_failure_cache(failure_cache)
 
     def _get_availability_cache_path(self):
         """Return the path to the Yahoo availability cache file."""
@@ -78,6 +135,12 @@ class DataFetcher:
 
     def _probe_yahoo_status(self, test_ticker=None):
         """Probe Yahoo Finance service for availability and provide a status message."""
+        probe_cache_key = str(test_ticker or 'default').strip() or 'default'
+        recent_failure = self._get_recent_failure(probe_cache_key, 'probe')
+        if recent_failure:
+            logger.info('Skipping Yahoo probe for %s due to recent failure: %s', probe_cache_key, recent_failure.get('reason'))
+            return False, f"Yahoo probe skipped due to recent failure: {recent_failure.get('reason')}"
+
         candidates = []
         if test_ticker:
             candidates.append(test_ticker)
@@ -142,6 +205,7 @@ class DataFetcher:
         if last_exc:
             msg += f"; last error: {str(last_exc)}"
 
+        self._set_recent_failure(probe_cache_key, 'probe', msg)
         return False, msg
 
     def check_yahoo_status(self, test_ticker=None):
@@ -437,6 +501,7 @@ class DataFetcher:
                     'data_source': 'Yahoo'
                 }
                 self.cache_data(normalized_ticker.replace('.', '_'), pd.DataFrame([live_data]), cache_type='live')
+                self._clear_recent_failure(normalized_ticker.replace('.', '_'), 'live')
                 return live_data
 
         except Exception as e:
@@ -585,6 +650,7 @@ class DataFetcher:
 
         # 4) As a last resort, return demo fallback
         logger.warning('All live providers failed for %s; returning demo fallback', normalized_ticker)
+        self._set_recent_failure(normalized_ticker.replace('.', '_'), 'live', 'All live providers failed')
         try:
             demo_data = self._get_demo_data(ticker, is_fallback=True)
             demo_data['data_source'] = 'Demo fallback after all providers failed'
@@ -632,6 +698,13 @@ class DataFetcher:
                 logger.info('Using cached historical data for %s', ticker)
                 return cached
 
+            recent_failure = self._get_recent_failure(cache_key, 'historical')
+            if recent_failure:
+                logger.warning('Skipping historical Yahoo fetch for %s due to recent failure: %s', ticker, recent_failure.get('reason'))
+                demo_data = self._generate_demo_historical_data(ticker)
+                self.cache_data(cache_key, demo_data, cache_type='historical')
+                return demo_data
+
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             yahoo_ticker = self._resolve_ticker_for_yahoo(ticker)
@@ -676,10 +749,12 @@ class DataFetcher:
                 raise ValueError(f'No usable rows after cleaning for {ticker}')
             data = data.sort_values('Date').reset_index(drop=True)
             self.cache_data(cache_key, data, cache_type='historical')
+            self._clear_recent_failure(cache_key, 'historical')
             return data
 
         except Exception as e:
             logger.exception('Historical data fetch failed for %s: %s', ticker, e)
+            self._set_recent_failure(cache_key if 'cache_key' in locals() else str(ticker or '').replace('.', '_'), 'historical', str(e))
             demo_data = self._generate_demo_historical_data(ticker)
             self.cache_data(cache_key if 'cache_key' in locals() else str(ticker or '').replace('.', '_'), demo_data, cache_type='historical')
             return demo_data
