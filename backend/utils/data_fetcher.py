@@ -201,9 +201,11 @@ class DataFetcher:
                 time.sleep(delay)
                 delay = min(delay * 2, 8)
 
-        msg = f"Yahoo returned no data for test tickers tried: {candidates}"
+        msg = "Yahoo is temporarily unavailable; the app is using local/demo fallback data."
         if last_exc:
-            msg += f"; last error: {str(last_exc)}"
+            msg += f" Details: {str(last_exc)}"
+        if candidates:
+            msg += f" Tested tickers: {candidates}"
 
         self._set_recent_failure(probe_cache_key, 'probe', msg)
         return False, msg
@@ -217,6 +219,11 @@ class DataFetcher:
         Returns a dict with keys: 'available' (bool), 'message' (str), 'last_checked' (ISO datetime)
         """
         available, message = self._probe_yahoo_status(test_ticker=test_ticker)
+        if not available:
+            fallback_message = "Yahoo is temporarily unavailable; the app is using local/demo fallback data."
+            if message:
+                fallback_message = f"{fallback_message} {message}"
+            message = fallback_message
         return {
             'available': available,
             'message': message,

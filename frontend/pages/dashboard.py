@@ -194,7 +194,10 @@ def show():
                 if probe_result.get('available'):
                     st.success(f"Yahoo is available: {probe_result.get('message')}")
                 else:
-                    st.error(f"Yahoo unavailable: {probe_result.get('message')}")
+                    st.info(
+                        "Yahoo is temporarily unavailable, so the app is using local/demo data for this session. "
+                        f"{probe_result.get('message')}"
+                    )
 
         # Pre-warm cache button
         if st.button('Pre-warm cache (popular tickers)', key='prewarm'):

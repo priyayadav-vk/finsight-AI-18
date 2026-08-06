@@ -3,8 +3,8 @@ import json
 import time
 import unittest
 from unittest.mock import mock_open, patch
-from config import ALL_INDIAN_COMPANIES, AVAILABILITY_CACHE_TTL
-from utils.data_fetcher import DataFetcher
+from backend.config import ALL_INDIAN_COMPANIES, AVAILABILITY_CACHE_TTL
+from backend.utils.data_fetcher import DataFetcher
 
 
 class TestDataFetcher(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestDataFetcher(unittest.TestCase):
     def test_get_supported_companies_does_not_use_local_data_when_yahoo_unavailable(self):
         fetcher = DataFetcher()
 
-        with patch('utils.data_fetcher.os.path.exists', return_value=False):
+        with patch('backend.utils.data_fetcher.os.path.exists', return_value=False):
             with patch.object(fetcher, '_load_availability_cache', return_value={}):
                 with patch.object(fetcher, '_is_yahoo_service_available', return_value=False):
                     with patch.object(fetcher, 'has_local_data', return_value=True):
@@ -29,7 +29,7 @@ class TestDataFetcher(unittest.TestCase):
             'supported_companies': ['Adani Total Gas']
         }
 
-        with patch('utils.data_fetcher.os.path.exists', return_value=False):
+        with patch('backend.utils.data_fetcher.os.path.exists', return_value=False):
             with patch.object(fetcher, '_load_availability_cache', return_value=cache_data):
                 with patch.object(fetcher, '_is_yahoo_service_available', return_value=False):
                     supported = fetcher.get_supported_companies(force_refresh=True)
@@ -46,8 +46,8 @@ class TestDataFetcher(unittest.TestCase):
 
         m = mock_open(read_data=live_data)
 
-        with patch('utils.data_fetcher.os.path.exists', side_effect=exists):
-            with patch('utils.data_fetcher.open', m):
+        with patch('backend.utils.data_fetcher.os.path.exists', side_effect=exists):
+            with patch('backend.utils.data_fetcher.open', m):
                 with patch.object(fetcher, '_load_availability_cache', return_value={}):
                     with patch.object(fetcher, '_is_yahoo_service_available', return_value=False):
                         supported = fetcher.get_supported_companies(force_refresh=True)
@@ -77,8 +77,8 @@ class TestDataFetcher(unittest.TestCase):
                 return io.StringIO(verified_data)
             raise FileNotFoundError(path)
 
-        with patch('utils.data_fetcher.os.path.exists', side_effect=exists):
-            with patch('utils.data_fetcher.open', fake_open):
+        with patch('backend.utils.data_fetcher.os.path.exists', side_effect=exists):
+            with patch('backend.utils.data_fetcher.open', fake_open):
                 with patch.object(fetcher, '_is_yahoo_service_available', return_value=True):
                     supported = fetcher.get_supported_companies(force_refresh=True)
                     self.assertIn('3M India Limited', supported)
@@ -93,7 +93,7 @@ class TestDataFetcher(unittest.TestCase):
             'supported_companies': ['Adani Total Gas']
         }
 
-        with patch('utils.data_fetcher.os.path.exists', return_value=False):
+        with patch('backend.utils.data_fetcher.os.path.exists', return_value=False):
             with patch.object(fetcher, '_load_availability_cache', return_value=cache_data):
                 with patch.object(fetcher, '_is_yahoo_service_available', return_value=False):
                     supported = fetcher.get_supported_companies(force_refresh=True)
@@ -108,6 +108,13 @@ class TestDataFetcher(unittest.TestCase):
             self.assertIn('message', status)
             self.assertIn('last_checked', status)
             self.assertFalse(status['available'])
+
+    def test_check_yahoo_status_message_is_fallback_friendly(self):
+        fetcher = DataFetcher()
+        with patch.object(fetcher, '_probe_yahoo_status', return_value=(False, 'HTTP Error 401: Unauthorized')):
+            status = fetcher.check_yahoo_status('RELIANCE.NS')
+            self.assertFalse(status['available'])
+            self.assertIn('fallback', status['message'].lower())
 
 
 if __name__ == '__main__':
