@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+INFY.NS,Infosys Limited,1174.0,1174.699951171875,1177.5,1162.300048828125,1167.5,9964155,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo

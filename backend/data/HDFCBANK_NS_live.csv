@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+HDFCBANK.NS,HDFC Bank Limited,735.0,733.7999877929688,741.9500122070312,732.5999755859375,742.0,60050538,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo

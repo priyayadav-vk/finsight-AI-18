@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+AUBANK.NS,AU Small Finance Bank Limited,0.0,0.0,0.0,0.0,1059.0,957552,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo

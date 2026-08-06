@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+RELIANCE.NS,Reliance Industries Limited,1280.0,1293.0,1299.0,1270.0999755859375,1290.9000244140625,24820782,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo

@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+ABB.NS,ABB India Limited,7690.5,7748.0,7833.0,7675.0,7700.0,267379,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo

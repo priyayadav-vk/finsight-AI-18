@@ -1,0 +1,2 @@
+ticker,company_name,current_price,open_price,high_price,low_price,previous_close,volume,market_status,last_updated,date,data_index_timestamp_utc,data_source
+BAJAJFINSV.NS,Bajaj Finserv Ltd.,2086.0,2105.0,2118.5,2076.10009765625,2105.0,2447845,[CLOSED],2026-08-05 00:00:00 UTC+05:30,2026-08-05,2026-08-05T00:00:00+05:30,Yahoo
